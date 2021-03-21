@@ -9,6 +9,8 @@ namespace PlainDataAccess.Tests
     {
         private static ConnectionInfo Db => DatabaseFixture.Db;
 
+        public Tests() => QueryExtensions.MappingCheckEnabled = true;
+
         [Fact]
         public async Task Posts_Success()
         {

@@ -31,6 +31,8 @@ namespace PlainDataAccess
                     
                     await using (var reader = await command.ExecuteReaderAsync())
                     {
+                        CheckMapping<T>(reader);
+
                         var materializer = reader.GetMaterializer<T>();
 
                         var result = new List<T>();
@@ -43,7 +45,7 @@ namespace PlainDataAccess
                 }
             }
         }
-
+        
         public static async Task<T> Single<T>(this Query query)
         {
             var list = await query.ToList<T>();
