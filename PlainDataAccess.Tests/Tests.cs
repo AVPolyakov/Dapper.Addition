@@ -55,7 +55,7 @@ ORDER BY p.PostId", new {date});
 SELECT p.PostId, p.Text, p.CreationDate
 FROM Post p");
             if (date.HasValue)
-                query.AppendLine(@"
+                query.Append(@"
 WHERE p.CreationDate >= @date", new {date});
 
             return query.ToList<PostInfo>();

@@ -7,14 +7,14 @@ namespace PlainDataAccess
 {
     public static partial class QueryExtensions
     {
-        public static Query AppendLine(this Query query, string queryText)
+        public static Query Append(this Query query, string queryText)
         {
-            query.StringBuilder.AppendLine(queryText);
+            query.StringBuilder.Append(queryText);
             return query;
         }
         
-        public static Query AppendLine<T>(this Query query, string queryText, T param) 
-            => query.AppendLine(queryText).AddParams(param);
+        public static Query Append<T>(this Query query, string queryText, T param) 
+            => query.Append(queryText).AddParams(param);
 
         public static async Task<List<T>> ToList<T>(this Query query)
         {
