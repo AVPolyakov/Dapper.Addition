@@ -108,6 +108,53 @@ SELECT
             Assert.Equal(Enum2.Item2, record1.A4);
             Assert.Equal(a5, record1.A5);
             Assert.Equal(a6, record1.A6);
-        }        
+        }
+        
+        [Fact]
+        public async Task InsertUpdateDelete_Success()
+        {
+            int id;
+            {
+                var post = new Post {CreationDate = new DateTime(2014, 1, 1)};
+                FillPost(post, new PostData {Text = "Test"});
+                id = await Db.InsertWithInt32Identity(post);
+                Assert.Equal("Test", await Db.Query("SELECT Text FROM Post WHERE PostId = @id", new {id}).Single<string>());
+            }
+            {
+                var post = await Db.GetByKey<Post>(new {PostId = id});
+                FillPost(post, new PostData {Text = "Test2"});
+                await Db.Update(post);
+                Assert.Equal("Test2", await Db.Query("SELECT Text FROM Post WHERE PostId = @id", new {id}).Single<string>());
+            }
+            {
+                var rowCount = await Db.Delete<Post>(new {PostId = id});
+                Assert.Equal(1, rowCount);
+                Assert.Empty(await Db.Query("SELECT Text FROM Post WHERE PostId = @id", new {id}).ToList<string>());
+            }
+        }
+        
+        private static void FillPost(Post post, PostData postData)
+        {
+            post.Text = postData.Text;
+        }
+        
+        [Fact]
+        public async Task Subquery_Success()
+        {
+            var date = new DateTime(2015, 1, 1);
+
+            var query = Db.Query();
+            query.Append($@"
+SELECT p.PostId, p.Text, p.CreationDate
+FROM ({Post(query)}) p
+WHERE p.CreationDate >= @date
+ORDER BY p.PostId", new {date});
+
+            var postInfos = await query.ToList<PostInfo>();
+            
+            Assert.Equal(2, postInfos.Count);
+        }
+
+        private static Query Post(Query query) => query.Query("SELECT * FROM Post");
     }
 }

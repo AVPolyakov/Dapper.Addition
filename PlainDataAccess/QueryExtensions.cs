@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
@@ -13,7 +14,7 @@ namespace PlainDataAccess
             return query;
         }
         
-        public static Query Append<T>(this Query query, string queryText, T param) 
+        public static Query Append(this Query query, string queryText, object param) 
             => query.Append(queryText).AddParams(param);
 
         public static async Task<List<T>> ToList<T>(this Query query)
@@ -51,5 +52,31 @@ namespace PlainDataAccess
             var list = await query.ToList<T>();
             return list.Single();
         }
+
+        public static async Task<int> Execute(this Query query)
+        {
+            await using (var connection = new SqlConnection(query.ConnectionInfo.ConnectionString))
+            {
+                await connection.OpenAsync();
+
+                await using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = query.StringBuilder.ToString();
+
+                    foreach (var dbCommandAction in query.DbCommandActions)
+                        dbCommandAction(command);
+
+                    return await command.ExecuteNonQueryAsync();
+                }
+            }
+        }
+
+        public static Query Query(this Query query) => new(query.ConnectionInfo, query.DbCommandActions);
+        
+        public static Query Query(this Query query, string queryText)
+            => query.Query().Append(queryText);
+        
+        public static Query Query(this Query query, string queryText, object param)
+            => query.Query().Append(queryText, param);
     }
 }

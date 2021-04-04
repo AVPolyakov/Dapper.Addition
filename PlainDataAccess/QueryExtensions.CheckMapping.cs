@@ -93,7 +93,8 @@ namespace PlainDataAccess
 
         private static string GenerateDestinationProperties(SqlDataReader reader)
         {
-            return string.Join(Environment.NewLine,
+            return string.Join(@"
+",
                 Enumerable.Range(0, reader.FieldCount).Select(i =>
                 {
                     var type = AllowDbNull(reader, i) && reader.GetFieldType(i).IsValueType

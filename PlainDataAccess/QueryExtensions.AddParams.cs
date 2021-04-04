@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
@@ -11,12 +12,31 @@ namespace PlainDataAccess
 {
     public static partial class QueryExtensions
     {
-        public static Query AddParams<T>(this Query query, T param)
+        public static Query AddParams(this Query query, object param)
         {
-            query.DbCommandActions.Add(command => AddParamsCache<T>.Action(command, param));
+            query.DbCommandActions.Add(command =>
+            {
+                var type = param.GetType();
+                Action<SqlCommand, object> action;
+                if (_addParamDictionary.TryGetValue(type, out var value))
+                    action = value;
+                else
+                {
+                    var methodInfo = GetMethodInfo<Func<Action<SqlCommand, object>>>(() => GetAddParamAction<object>());
+                    var method = methodInfo.GetGenericMethodDefinition().MakeGenericMethod(type);
+                    action = (Action<SqlCommand, object>) method.Invoke(null, null)!;
+                    _addParamDictionary.TryAdd(type, action);
+                }
+                action(command, param);            
+            });
             return query;
         }
-
+        
+        private static readonly ConcurrentDictionary<Type, Action<SqlCommand, object>> _addParamDictionary = new();
+        
+        private static Action<SqlCommand, object> GetAddParamAction<T>() 
+            => (command, param) => AddParamsCache<T>.Action(command, (T) param);
+        
         private static class AddParamsCache<T>
         {
             public static readonly Action<SqlCommand, T> Action;
