@@ -26,8 +26,9 @@ namespace PlainDataAccess
 
         public static Task<TKey> Insert<TKey>(this IConnectionInfo connectionInfo, object param)
         {
-            var table = GetTableName(param.GetType());
-            var columnInfos = GetColumns(table, connectionInfo);
+            var type = param.GetType();
+            var table = GetTableName(type);
+            var columnInfos = GetColumns(table, connectionInfo, type);
             var notAutoIncrementColumns = columnInfos
                 .Where(_ => !_.IsAutoIncrement)
                 .Select(_ => _.ColumnName)
@@ -44,8 +45,9 @@ VALUES ({valuesClause})", param);
         
         public static Task<int> Update(this IConnectionInfo connectionInfo, object param)
         {
-            var table = GetTableName(param.GetType());
-            var columnInfos = GetColumns(table, connectionInfo);
+            var type = param.GetType();
+            var table = GetTableName(type);
+            var columnInfos = GetColumns(table, connectionInfo, type);
             var setClause = string.Join(",",
                 columnInfos
                     .Where(_ => !_.IsKey)
@@ -61,8 +63,9 @@ WHERE {whereClause}", param);
 
         public static Task<int> Delete<T>(this IConnectionInfo connectionInfo, object param)
         {
-            var tableName = GetTableName(typeof(T));
-            var columnInfos = GetColumns(tableName, connectionInfo);
+            var type = typeof(T);
+            var tableName = GetTableName(type);
+            var columnInfos = GetColumns(tableName, connectionInfo, type);
             var whereClause = string.Join(" AND ", 
                 columnInfos.Where(_ => _.IsKey).Select(_ => $"{_.ColumnName}=@{_.ColumnName}"));
             var query = connectionInfo.Query($@"
@@ -73,8 +76,9 @@ WHERE {whereClause}", param);
         
         public static Task<T> GetByKey<T>(this IConnectionInfo connectionInfo, object param)
         {
-            var tableName = GetTableName(typeof(T));
-            var columnInfos = GetColumns(tableName, connectionInfo);
+            var type = typeof(T);
+            var tableName = GetTableName(type);
+            var columnInfos = GetColumns(tableName, connectionInfo, type);
             var selectClause = string.Join(",", 
                 columnInfos.Select(_ => _.ColumnName));
             var whereClause = string.Join(" AND ", 
@@ -90,12 +94,12 @@ WHERE {whereClause}", param);
 
         private static readonly ConcurrentDictionary<TableKey, List<ColumnInfo>> _columnDictionary = new();
         
-        private static List<ColumnInfo> GetColumns(string table, IConnectionInfo connectionInfo)
+        private static List<ColumnInfo> GetColumns(string table, IConnectionInfo connectionInfo, Type type)
         {
             var tableKey = new TableKey(table, connectionInfo.ConnectionString);
             if (!_columnDictionary.TryGetValue(tableKey, out var value))
             {
-                value = GetColumnEnumerable(table, connectionInfo).ToList();
+                value = GetColumnEnumerable(table, connectionInfo, type).ToList();
                 _columnDictionary[tableKey] = value;
             }
             return value;
@@ -105,7 +109,7 @@ WHERE {whereClause}", param);
         {
         }
 
-        private static IEnumerable<ColumnInfo> GetColumnEnumerable(string table, IConnectionInfo connectionInfo)
+        private static IEnumerable<ColumnInfo> GetColumnEnumerable(string table, IConnectionInfo connectionInfo, Type type)
         {
             using (var connection = new SqlConnection(connectionInfo.ConnectionString))
             {
@@ -115,6 +119,8 @@ WHERE {whereClause}", param);
                     command.CommandText = $"SELECT * FROM {table}";
                     using (var reader = command.ExecuteReader(CommandBehavior.SchemaOnly | CommandBehavior.KeyInfo))
                     {
+                        QueryExtensions.CheckMapping(reader, type);
+                        
                         var schemaTable = reader.GetSchemaTable();
                         foreach (DataRow dataRow in schemaTable.Rows)
                             yield return new ColumnInfo(

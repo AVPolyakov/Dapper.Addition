@@ -20,11 +20,19 @@ namespace PlainDataAccess
         {
             if (!MappingCheckEnabled)
                 return;
-
-            var readMethod = GetReadMethod(typeof(T));
-
-            var properties = typeof(T).GetProperties();
             
+            CheckMapping(reader, typeof(T));
+        }
+
+        internal static void CheckMapping(SqlDataReader reader, Type type)
+        {
+            if (!MappingCheckEnabled)
+                return;
+
+            var readMethod = GetReadMethod(type);
+
+            var properties = type.GetProperties();
+
             var queryFieldCount = reader.FieldCount;
             var destinationFieldCount = readMethod != null ? 1 : properties.Length;
             if (queryFieldCount != destinationFieldCount)
@@ -39,7 +47,7 @@ namespace PlainDataAccess
                 if (readMethod != null)
                 {
                     ordinal = 0;
-                    destinationType = typeof(T);
+                    destinationType = type;
                 }
                 else
                 {
