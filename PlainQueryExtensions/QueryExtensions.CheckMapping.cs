@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Data.SqlClient;
+using System.Data.Common;
 using System.Linq;
 using System.Threading;
 
-namespace PlainDataAccess
+namespace PlainQueryExtensions
 {
     public static partial class QueryExtensions
     {
@@ -16,15 +16,15 @@ namespace PlainDataAccess
             set => _mappingCheckEnabled.Value = value;
         }
 
-        private static void CheckMapping<T>(SqlDataReader reader)
+        private static void CheckMapping<T>(this DbDataReader reader)
         {
             if (!MappingCheckEnabled)
                 return;
             
-            CheckMapping(reader, typeof(T));
+            reader.CheckMapping(typeof(T));
         }
 
-        internal static void CheckMapping(SqlDataReader reader, Type type)
+        internal static void CheckMapping(this DbDataReader reader, Type type)
         {
             if (!MappingCheckEnabled)
                 return;
@@ -60,7 +60,7 @@ namespace PlainDataAccess
             }
         }
 
-        private static void CheckFieldType(SqlDataReader reader, int ordinal, Type destinationType)
+        private static void CheckFieldType(DbDataReader reader, int ordinal, Type destinationType)
         {
             var fieldType = reader.GetFieldType(ordinal);
             var allowDbNull = AllowDbNull(reader, ordinal);
@@ -93,13 +93,13 @@ namespace PlainDataAccess
             }
         }
 
-        private static Exception GetException(this SqlDataReader reader, string message)
+        private static Exception GetException(this DbDataReader reader, string message)
         {
             return new($@"{message} You can copy list of properties to destination type:
 {GenerateDestinationProperties(reader)}");
         }
 
-        private static string GenerateDestinationProperties(SqlDataReader reader)
+        private static string GenerateDestinationProperties(DbDataReader reader)
         {
             return string.Join(@"
 ",
@@ -120,9 +120,9 @@ namespace PlainDataAccess
             return type == dbType;
         }
         
-        private static bool AllowDbNull(SqlDataReader reader, int ordinal)
+        private static bool AllowDbNull(DbDataReader reader, int ordinal)
         {
-            return (bool) reader.GetSchemaTable().Rows[ordinal]["AllowDBNull"];
+            return (bool) reader.GetSchemaTable()!.Rows[ordinal]["AllowDBNull"];
         }
         
         /// <summary>

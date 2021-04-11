@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlainQuery", "PlainQuery\PlainQuery.csproj", "{B85019EE-5ACA-4A8A-BD7E-5F549655B948}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlainQueryExtensions", "PlainQueryExtensions\PlainQueryExtensions.csproj", "{3C5A6279-62A9-4C7E-9019-680A271A9623}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlainQueryExtensions.Tests", "PlainQueryExtensions.Tests\PlainQueryExtensions.Tests.csproj", "{4480D4FA-4B9A-49C7-B6D5-FD20E5CB3864}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B85019EE-5ACA-4A8A-BD7E-5F549655B948}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B85019EE-5ACA-4A8A-BD7E-5F549655B948}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B85019EE-5ACA-4A8A-BD7E-5F549655B948}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B85019EE-5ACA-4A8A-BD7E-5F549655B948}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3C5A6279-62A9-4C7E-9019-680A271A9623}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3C5A6279-62A9-4C7E-9019-680A271A9623}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3C5A6279-62A9-4C7E-9019-680A271A9623}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3C5A6279-62A9-4C7E-9019-680A271A9623}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4480D4FA-4B9A-49C7-B6D5-FD20E5CB3864}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4480D4FA-4B9A-49C7-B6D5-FD20E5CB3864}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4480D4FA-4B9A-49C7-B6D5-FD20E5CB3864}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4480D4FA-4B9A-49C7-B6D5-FD20E5CB3864}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

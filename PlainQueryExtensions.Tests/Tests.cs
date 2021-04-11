@@ -1,13 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using PlainQuery;
 using Xunit;
 
-namespace PlainDataAccess.Tests
+namespace PlainQueryExtensions.Tests
 {
-    public class Tests:  IClassFixture<DatabaseFixture>
+    [Collection(nameof(DatabaseCollection))]
+    public class Tests
     {
-        private static ConnectionInfo Db => DatabaseFixture.Db;
+        private static ConnectionProvider Db => DatabaseFixture.Db;
 
         public Tests() => QueryExtensions.MappingCheckEnabled = true;
 
@@ -16,13 +18,13 @@ namespace PlainDataAccess.Tests
         {
             var date = new DateTime(2015, 1, 1);
             
-            var query = Db.Query(@"
+            var query = new Query(@"
 SELECT p.PostId, p.Text, p.CreationDate
 FROM Post p
 WHERE p.CreationDate >= @date
 ORDER BY p.PostId", new {date});
 
-            var postInfos = await query.ToList<PostInfo>();
+            var postInfos = await query.ToList<PostInfo>(Db);
             
             Assert.Equal(2, postInfos.Count);
 
@@ -51,25 +53,25 @@ ORDER BY p.PostId", new {date});
 
         private static Task<List<PostInfo>> GetPosts(DateTime? date)
         {
-            var query = Db.Query(@"
+            var query = new Query(@"
 SELECT p.PostId, p.Text, p.CreationDate
 FROM Post p");
             if (date.HasValue)
                 query.Append(@"
 WHERE p.CreationDate >= @date", new {date});
 
-            return query.ToList<PostInfo>();
+            return query.ToList<PostInfo>(Db);
         }
 
         [Fact]
         public async Task ScalarType_Success()
         {
-            var single = await Db.Query("SELECT @A1 AS A1",
+            var single = await new Query("SELECT @A1 AS A1",
                     new
                     {
                         A1 = "Test3"
                     })
-                .Single<string>();
+                .Single<string>(Db);
             
             Assert.Equal("Test3", single);
         }        
@@ -82,7 +84,7 @@ WHERE p.CreationDate >= @date", new {date});
             Enum2? a5 = Enum2.Item2;
             Enum2? a6 = null;
             
-            var record1 = await Db.Query(@"
+            var record1 = await new Query(@"
 SELECT 
     @A1 AS A1,
     @A2 AS A2,
@@ -100,7 +102,7 @@ SELECT
                         A5 = a5,
                         A6 = a6,
                     })
-                .Single<Record1>();
+                .Single<Record1>(Db);
             
             Assert.Equal(Enum1.Item2, record1.A1);
             Assert.Equal(a2, record1.A2);
@@ -117,19 +119,19 @@ SELECT
             {
                 var post = new Post {CreationDate = new DateTime(2014, 1, 1)};
                 FillPost(post, new PostData {Text = "Test"});
-                id = await Db.InsertWithInt32Identity(post);
-                Assert.Equal("Test", await Db.Query("SELECT Text FROM Post WHERE PostId = @id", new {id}).Single<string>());
+                id = await Db.Insert<int>(post);
+                Assert.Equal("Test", await new Query("SELECT Text FROM Post WHERE PostId = @id", new {id}).Single<string>(Db));
             }
             {
                 var post = await Db.GetByKey<Post>(new {PostId = id});
                 FillPost(post, new PostData {Text = "Test2"});
                 await Db.Update(post);
-                Assert.Equal("Test2", await Db.Query("SELECT Text FROM Post WHERE PostId = @id", new {id}).Single<string>());
+                Assert.Equal("Test2", await new Query("SELECT Text FROM Post WHERE PostId = @id", new {id}).Single<string>(Db));
             }
             {
                 var rowCount = await Db.Delete<Post>(new {PostId = id});
                 Assert.Equal(1, rowCount);
-                Assert.Empty(await Db.Query("SELECT Text FROM Post WHERE PostId = @id", new {id}).ToList<string>());
+                Assert.Empty(await new Query("SELECT Text FROM Post WHERE PostId = @id", new {id}).ToList<string>(Db));
             }
         }
         
@@ -139,22 +141,31 @@ SELECT
         }
         
         [Fact]
-        public async Task Subquery_Success()
+        public async Task SubQuery_Success()
         {
-            var date = new DateTime(2015, 1, 1);
+            var toDate = new DateTime(2050, 1, 1);
 
-            var query = Db.Query();
+            var query = new Query();
             query.Append($@"
 SELECT p.PostId, p.Text, p.CreationDate
 FROM ({Post(query)}) p
-WHERE p.CreationDate >= @date
-ORDER BY p.PostId", new {date});
+WHERE p.CreationDate <= @toDate
+ORDER BY p.PostId", new {toDate});
 
-            var postInfos = await query.ToList<PostInfo>();
+            var postInfos = await query.ToList<PostInfo>(Db);
             
             Assert.Equal(2, postInfos.Count);
         }
 
-        private static Query Post(Query query) => query.Query("SELECT * FROM Post");
+        private static Query Post(Query query)
+        {
+            var fromDate = new DateTime(2015, 1, 1);
+            
+            return query.Query(@"
+SELECT * 
+FROM Post p
+WHERE p.CreationDate >= @fromDate
+", new {fromDate});
+        }
     }
 }

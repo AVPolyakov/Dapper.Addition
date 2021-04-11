@@ -1,4 +1,4 @@
-namespace PlainDataAccess.Tests
+namespace PlainQueryExtensions.Tests
 {
     public class Record1
     {

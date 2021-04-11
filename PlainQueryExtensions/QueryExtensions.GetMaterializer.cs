@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.Data.SqlClient;
+using System.Data.Common;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 
-namespace PlainDataAccess
+namespace PlainQueryExtensions
 {
     public static partial class QueryExtensions
     {
@@ -14,21 +14,21 @@ namespace PlainDataAccess
         /// Returns the function that creates the instance of type T and populates the instance properties 
         /// from DataReader.
         /// </summary>
-        public static Func<T> GetMaterializer<T>(this SqlDataReader reader) => Cache<T>.Func(reader);
+        public static Func<T> GetMaterializer<T>(this DbDataReader reader) => Cache<T>.Func(reader);
         
         private static class Cache<T>
         {
-            public static readonly Func<SqlDataReader, Func<T>> Func;
+            public static readonly Func<DbDataReader, Func<T>> Func;
 
             static Cache()
             {
-                Func<SqlDataReader, Func<T>> func;
+                Func<DbDataReader, Func<T>> func;
                 
                 var readMethod = GetReadMethod(typeof(T));
                 if (readMethod != null)
                 {
                     var dynamicMethod = new DynamicMethod(System.Guid.NewGuid().ToString("N"), typeof(T),
-                        new[] {typeof(SqlDataReader)}, true);
+                        new[] {typeof(DbDataReader)}, true);
                     
                     var ilGenerator = dynamicMethod.GetILGenerator();
                     ilGenerator.Emit(OpCodes.Ldarg_0);
@@ -36,7 +36,7 @@ namespace PlainDataAccess
                     ilGenerator.EmitCall(readMethod.IsVirtual ? OpCodes.Callvirt : OpCodes.Call, readMethod, null);
                     ilGenerator.Emit(OpCodes.Ret);
                     
-                    var @delegate = (Func<SqlDataReader, T>) dynamicMethod.CreateDelegate(typeof(Func<SqlDataReader, T>));
+                    var @delegate = (Func<DbDataReader, T>) dynamicMethod.CreateDelegate(typeof(Func<DbDataReader, T>));
                     func = reader => () => @delegate(reader);
                 }
                 else
@@ -49,7 +49,7 @@ namespace PlainDataAccess
                     
                     var methodBuilder = typeBuilder.DefineMethod(nameof(IMaterializer<object>.Materialize),
                         MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.HideBySig | MethodAttributes.Final |
-                        MethodAttributes.NewSlot, typeof(T), new[] {typeof(SqlDataReader)});
+                        MethodAttributes.NewSlot, typeof(T), new[] {typeof(DbDataReader)});
                     
                     var generator = methodBuilder.GetILGenerator();
                     generator.DeclareLocal(typeof(T));
@@ -72,7 +72,7 @@ namespace PlainDataAccess
                     
                     var type = typeBuilder.CreateTypeInfo()!;
                     var dynamicMethod = new DynamicMethod(System.Guid.NewGuid().ToString("N"), typeof(IMaterializer<T>),
-                        new[] {typeof(SqlDataReader)}, true);
+                        new[] {typeof(DbDataReader)}, true);
                     var ilGenerator = dynamicMethod.GetILGenerator();
                     ilGenerator.DeclareLocal(type);
                     ilGenerator.Emit(OpCodes.Newobj, type.GetConstructor(Array.Empty<Type>())!);
@@ -82,13 +82,13 @@ namespace PlainDataAccess
                         ilGenerator.Emit(OpCodes.Ldloc_0);
                         ilGenerator.Emit(OpCodes.Ldarg_0);
                         ilGenerator.Emit(OpCodes.Ldstr, fieldInfo.Name);
-                        ilGenerator.EmitCall(OpCodes.Call, GetMethodInfo<Func<SqlDataReader, string, int>>((reader, name) => reader.Ordinal(name)), null);
+                        ilGenerator.EmitCall(OpCodes.Call, GetMethodInfo<Func<DbDataReader, string, int>>((reader, name) => reader.Ordinal(name)), null);
                         ilGenerator.Emit(OpCodes.Stfld, fieldInfo);
                     }
                     ilGenerator.Emit(OpCodes.Ldloc_0);
                     ilGenerator.Emit(OpCodes.Ret);
                     
-                    var @delegate = (Func<SqlDataReader, IMaterializer<T>>) dynamicMethod.CreateDelegate(typeof(Func<SqlDataReader, IMaterializer<T>>));
+                    var @delegate = (Func<DbDataReader, IMaterializer<T>>) dynamicMethod.CreateDelegate(typeof(Func<DbDataReader, IMaterializer<T>>));
                     func = reader =>
                     {
                         var materializer = @delegate(reader);
@@ -100,11 +100,11 @@ namespace PlainDataAccess
             }
         }
         
-        public static int Ordinal(this SqlDataReader reader, string name) => reader.GetOrdinal(name);
+        public static int Ordinal(this DbDataReader reader, string name) => reader.GetOrdinal(name);
         
         public interface IMaterializer<out T>
         {
-            T Materialize(SqlDataReader reader);
+            T Materialize(DbDataReader reader);
         }
 
         private static readonly ModuleBuilder _moduleBuilder;
@@ -146,88 +146,88 @@ namespace PlainDataAccess
 
         public static readonly Dictionary<Type, MethodInfo> ReadMethodInfos = new[]
             {
-                GetMethodInfo<Func<SqlDataReader, int, int>>((reader, i) => reader.Int32(i)),
-                GetMethodInfo<Func<SqlDataReader, int, int?>>((reader, i) => reader.NullableInt32(i)),
-                GetMethodInfo<Func<SqlDataReader, int, long>>((reader, i) => reader.Int64(i)),
-                GetMethodInfo<Func<SqlDataReader, int, long?>>((reader, i) => reader.NullableInt64(i)),
-                GetMethodInfo<Func<SqlDataReader, int, decimal>>((reader, i) => reader.Decimal(i)),
-                GetMethodInfo<Func<SqlDataReader, int, decimal?>>((reader, i) => reader.NullableDecimal(i)),
-                GetMethodInfo<Func<SqlDataReader, int, Guid>>((reader, i) => reader.Guid(i)),
-                GetMethodInfo<Func<SqlDataReader, int, Guid?>>((reader, i) => reader.NullableGuid(i)),
-                GetMethodInfo<Func<SqlDataReader, int, DateTime>>((reader, i) => reader.DateTime(i)),
-                GetMethodInfo<Func<SqlDataReader, int, DateTime?>>((reader, i) => reader.NullableDateTime(i)),
-                GetMethodInfo<Func<SqlDataReader, int, string?>>((reader, i) => reader.String(i)),
-                GetMethodInfo<Func<SqlDataReader, int, bool>>(((reader, i) => reader.Boolean(i))),
-                GetMethodInfo<Func<SqlDataReader, int, bool?>>((reader, i) => reader.NullableBoolean(i))
+                GetMethodInfo<Func<DbDataReader, int, int>>((reader, i) => reader.Int32(i)),
+                GetMethodInfo<Func<DbDataReader, int, int?>>((reader, i) => reader.NullableInt32(i)),
+                GetMethodInfo<Func<DbDataReader, int, long>>((reader, i) => reader.Int64(i)),
+                GetMethodInfo<Func<DbDataReader, int, long?>>((reader, i) => reader.NullableInt64(i)),
+                GetMethodInfo<Func<DbDataReader, int, decimal>>((reader, i) => reader.Decimal(i)),
+                GetMethodInfo<Func<DbDataReader, int, decimal?>>((reader, i) => reader.NullableDecimal(i)),
+                GetMethodInfo<Func<DbDataReader, int, Guid>>((reader, i) => reader.Guid(i)),
+                GetMethodInfo<Func<DbDataReader, int, Guid?>>((reader, i) => reader.NullableGuid(i)),
+                GetMethodInfo<Func<DbDataReader, int, DateTime>>((reader, i) => reader.DateTime(i)),
+                GetMethodInfo<Func<DbDataReader, int, DateTime?>>((reader, i) => reader.NullableDateTime(i)),
+                GetMethodInfo<Func<DbDataReader, int, string?>>((reader, i) => reader.String(i)),
+                GetMethodInfo<Func<DbDataReader, int, bool>>(((reader, i) => reader.Boolean(i))),
+                GetMethodInfo<Func<DbDataReader, int, bool?>>((reader, i) => reader.NullableBoolean(i))
             }
             .ToDictionary(methodInfo => methodInfo.ReturnType);
         
-        public static int Int32(this SqlDataReader reader, int ordinal) 
+        public static int Int32(this DbDataReader reader, int ordinal) 
             => reader.GetInt32(ordinal);
 
-        public static long? NullableInt64(this SqlDataReader reader, int ordinal)
+        public static long? NullableInt64(this DbDataReader reader, int ordinal)
             => reader.IsDBNull(ordinal) ? new long?() : reader.GetInt64(ordinal);
         
-        public static long Int64(this SqlDataReader reader, int ordinal)
+        public static long Int64(this DbDataReader reader, int ordinal)
             => reader.GetInt64(ordinal);
 
-        public static int? NullableInt32(this SqlDataReader reader, int ordinal)
+        public static int? NullableInt32(this DbDataReader reader, int ordinal)
             => reader.IsDBNull(ordinal) ? new int?() : reader.GetInt32(ordinal);
         
-        public static decimal Decimal(this SqlDataReader reader, int ordinal)
+        public static decimal Decimal(this DbDataReader reader, int ordinal)
             => reader.GetDecimal(ordinal);
 
-        public static decimal? NullableDecimal(this SqlDataReader reader, int ordinal)
+        public static decimal? NullableDecimal(this DbDataReader reader, int ordinal)
             => reader.IsDBNull(ordinal) ? new decimal?() : reader.GetDecimal(ordinal);
 
-        public static Guid Guid(this SqlDataReader reader, int ordinal)
+        public static Guid Guid(this DbDataReader reader, int ordinal)
             => reader.GetGuid(ordinal);
 
-        public static Guid? NullableGuid(this SqlDataReader reader, int ordinal)
+        public static Guid? NullableGuid(this DbDataReader reader, int ordinal)
             => reader.IsDBNull(ordinal) ? new Guid?() : reader.GetGuid(ordinal);
         
-        public static DateTime DateTime(this SqlDataReader reader, int ordinal)
+        public static DateTime DateTime(this DbDataReader reader, int ordinal)
             => reader.GetDateTime(ordinal);
 
-        public static DateTime? NullableDateTime(this SqlDataReader reader, int ordinal)
+        public static DateTime? NullableDateTime(this DbDataReader reader, int ordinal)
             => reader.IsDBNull(ordinal) ? new DateTime?() : reader.GetDateTime(ordinal);
 
-        public static string? String(this SqlDataReader reader, int ordinal)
+        public static string? String(this DbDataReader reader, int ordinal)
             => reader.IsDBNull(ordinal) ? null : reader.GetString(ordinal);
         
-        public static bool Boolean(this SqlDataReader reader, int ordinal)
+        public static bool Boolean(this DbDataReader reader, int ordinal)
             => reader.GetBoolean(ordinal);
 
-        public static bool? NullableBoolean(this SqlDataReader reader, int ordinal)
+        public static bool? NullableBoolean(this DbDataReader reader, int ordinal)
             => reader.IsDBNull(ordinal) ? new bool?() : reader.GetBoolean(ordinal);
         
-        private static readonly MethodInfo _intEnum = GetMethodInfo<Func<SqlDataReader, int, BindingFlags>>(
+        private static readonly MethodInfo _intEnum = GetMethodInfo<Func<DbDataReader, int, BindingFlags>>(
             (reader, ordinal) => reader.IntEnum<BindingFlags>(ordinal)).GetGenericMethodDefinition();
         
-        private static readonly MethodInfo _longEnum = GetMethodInfo<Func<SqlDataReader, int, BindingFlags>>(
+        private static readonly MethodInfo _longEnum = GetMethodInfo<Func<DbDataReader, int, BindingFlags>>(
             (reader, ordinal) => reader.LongEnum<BindingFlags>(ordinal)).GetGenericMethodDefinition();
         
-        private static readonly MethodInfo _nullableIntEnum = GetMethodInfo<Func<SqlDataReader, int, BindingFlags?>>(
+        private static readonly MethodInfo _nullableIntEnum = GetMethodInfo<Func<DbDataReader, int, BindingFlags?>>(
             (reader, ordinal) => reader.NullableIntEnum<BindingFlags>(ordinal)).GetGenericMethodDefinition();
 
-        private static readonly MethodInfo _nullableLongEnum = GetMethodInfo<Func<SqlDataReader, int, BindingFlags?>>(
+        private static readonly MethodInfo _nullableLongEnum = GetMethodInfo<Func<DbDataReader, int, BindingFlags?>>(
             (reader, ordinal) => reader.NullableLongEnum<BindingFlags>(ordinal)).GetGenericMethodDefinition();
 
-        public static T IntEnum<T>(this SqlDataReader reader, int ordinal)
+        public static T IntEnum<T>(this DbDataReader reader, int ordinal)
             where T : Enum
             => IntToEnumCache<T>.Func(reader.GetInt32(ordinal));
         
-        public static T LongEnum<T>(this SqlDataReader reader, int ordinal)
+        public static T LongEnum<T>(this DbDataReader reader, int ordinal)
             where T : Enum
             => LongToEnumCache<T>.Func(reader.GetInt64(ordinal));
 
-        public static T? NullableIntEnum<T>(this SqlDataReader reader, int ordinal)
+        public static T? NullableIntEnum<T>(this DbDataReader reader, int ordinal)
             where T : struct, Enum
             => reader.IsDBNull(ordinal)
                 ? new T?()
                 : IntToEnumCache<T>.Func(reader.GetInt32(ordinal));
 
-        public static T? NullableLongEnum<T>(this SqlDataReader reader, int ordinal)
+        public static T? NullableLongEnum<T>(this DbDataReader reader, int ordinal)
             where T : struct, Enum
             => reader.IsDBNull(ordinal)
                 ? new T?()

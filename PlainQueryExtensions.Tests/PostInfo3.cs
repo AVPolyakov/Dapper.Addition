@@ -1,6 +1,6 @@
 using System;
 
-namespace PlainDataAccess.Tests
+namespace PlainQueryExtensions.Tests
 {
     public class PostInfo3
     {

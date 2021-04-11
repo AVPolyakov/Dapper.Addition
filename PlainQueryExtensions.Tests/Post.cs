@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 
-namespace PlainDataAccess.Tests
+namespace PlainQueryExtensions.Tests
 {
     public class Post
     {
         public int PostId { get; set; }
         public string? Text { get; set; }
-        public DateTime CreationDate { get; set; }    
+        public DateTime CreationDate { get; set; }
     }
 }
