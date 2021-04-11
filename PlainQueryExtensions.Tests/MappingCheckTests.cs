@@ -8,7 +8,7 @@ namespace PlainQueryExtensions.Tests
     [Collection(nameof(DatabaseCollection))]
     public class MappingCheckTests
     {
-        private static ConnectionProvider Db => DatabaseFixture.Db;
+        private static ConnectionHandler Db => DatabaseFixture.Db;
 
         public MappingCheckTests() => global::PlainQueryExtensions.QueryExtensions.MappingCheckEnabled = true;
         

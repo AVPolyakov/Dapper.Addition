@@ -8,7 +8,7 @@ namespace PlainQueryExtensions.Tests
     public class DatabaseFixture
     {
         private const string DatabaseName = "PlainQueryExtensions";
-        public static readonly ConnectionProvider Db = new(@$"Data Source=(local)\SQL2014;Initial Catalog={DatabaseName};Integrated Security=True");
+        public static readonly ConnectionHandler Db = new(@$"Data Source=(local)\SQL2014;Initial Catalog={DatabaseName};Integrated Security=True");
         
         public DatabaseFixture()
         {

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Linq;
 using System.Threading.Tasks;
 using PlainQuery;
@@ -7,9 +8,9 @@ namespace PlainQueryExtensions
 {
     public static partial class QueryExtensions
     {
-        public static async Task<List<T>> ToList<T>(this Query query, IConnectionProvider connectionProvider)
+        public static Task<List<T>> ToList<T>(this Query query, IHandler<DbConnection> connectionHandler)
         {
-            await using (var connection = await connectionProvider.GetConnection())
+            return connectionHandler.Handle(async connection =>
             {
                 await connection.OpenIfClosed();
 
@@ -26,31 +27,31 @@ namespace PlainQueryExtensions
                         var materializer = reader.GetMaterializer<T>();
 
                         var result = new List<T>();
-                        
+
                         while (await reader.ReadAsync())
                             result.Add(materializer());
-                        
+
                         return result;
                     }
                 }
-            }
+            });
         }
         
-        public static async Task<T> Single<T>(this Query query, IConnectionProvider connectionProvider)
+        public static async Task<T> Single<T>(this Query query, IHandler<DbConnection> connectionHandler)
         {
-            var list = await query.ToList<T>(connectionProvider);
+            var list = await query.ToList<T>(connectionHandler);
             return list.Single();
         }
 
-        public static async Task<T?> SingleOrDefault<T>(this Query query, IConnectionProvider connectionProvider)
+        public static async Task<T?> SingleOrDefault<T>(this Query query, IHandler<DbConnection> connectionHandler)
         {
-            var list = await query.ToList<T>(connectionProvider);
+            var list = await query.ToList<T>(connectionHandler);
             return list.SingleOrDefault();
         }
 
-        public static async Task<int> Execute(this Query query, IConnectionProvider connectionProvider)
+        public static Task<int> Execute(this Query query, IHandler<DbConnection> connectionHandler)
         {
-            await using (var connection = await connectionProvider.GetConnection())
+            return connectionHandler.Handle(async connection =>
             {
                 await connection.OpenIfClosed();
 
@@ -62,7 +63,7 @@ namespace PlainQueryExtensions
 
                     return await command.ExecuteNonQueryAsync();
                 }
-            }
+            });
         }
     }
 }
