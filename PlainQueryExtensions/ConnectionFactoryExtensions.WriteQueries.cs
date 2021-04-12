@@ -11,7 +11,7 @@ namespace PlainQueryExtensions
 {
     public static class ConnectionProviderExtensions
     {
-        public static async Task<TKey> Insert<TKey>(this IConnectionHandler<DbConnection> connectionHandler, object param)
+        public static async Task<TKey> Insert<TKey>(this IHandler<DbConnection> connectionHandler, object param)
         {
             var type = param.GetType();
             var table = GetTableName(type);
@@ -30,7 +30,7 @@ VALUES ({valuesClause})", param);
             return await query.Single<TKey>(connectionHandler);
         }
         
-        public static async Task<int> Insert(this IConnectionHandler<DbConnection> connectionHandler, object param)
+        public static async Task<int> Insert(this IHandler<DbConnection> connectionHandler, object param)
         {
             var type = param.GetType();
             var table = GetTableName(type);
@@ -46,7 +46,7 @@ VALUES ({valuesClause})", param);
             return await query.Execute(connectionHandler);
         }
         
-        public static async Task<int> Update(this IConnectionHandler<DbConnection> connectionHandler, object param)
+        public static async Task<int> Update(this IHandler<DbConnection> connectionHandler, object param)
         {
             var type = param.GetType();
             var table = GetTableName(type);
@@ -64,7 +64,7 @@ WHERE {whereClause}", param);
             return await query.Execute(connectionHandler);
         }
 
-        public static async Task<int> Delete<T>(this IConnectionHandler<DbConnection> connectionHandler, object param)
+        public static async Task<int> Delete<T>(this IHandler<DbConnection> connectionHandler, object param)
         {
             var type = typeof(T);
             var tableName = GetTableName(type);
@@ -77,7 +77,7 @@ WHERE {whereClause}", param);
             return await query.Execute(connectionHandler);
         }
         
-        public static async Task<T> GetByKey<T>(this IConnectionHandler<DbConnection> connectionHandler, object param)
+        public static async Task<T> GetByKey<T>(this IHandler<DbConnection> connectionHandler, object param)
         {
             var type = typeof(T);
             var tableName = GetTableName(type);
@@ -97,9 +97,10 @@ WHERE {whereClause}", param);
 
         private static readonly ConcurrentDictionary<TableKey, List<ColumnInfo>> _columnDictionary = new();
         
-        private static async Task<List<ColumnInfo>> GetColumns(string table, IConnectionHandler<DbConnection> connectionHandler, Type type)
+        private static async Task<List<ColumnInfo>> GetColumns(string table, IHandler<DbConnection> connectionHandler, Type type)
         {
-            var tableKey = new TableKey(table, connectionHandler.ConnectionString);
+            var connectionString = await connectionHandler.Handle(connection => Task.FromResult(connection.ConnectionString));
+            var tableKey = new TableKey(table, connectionString);
             if (!_columnDictionary.TryGetValue(tableKey, out var value))
             {
                 value = await GetColumnEnumerable(table, connectionHandler, type);

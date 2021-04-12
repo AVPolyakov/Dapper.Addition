@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace PlainQueryExtensions.Tests
 {
-    public class ConnectionHandler : IConnectionHandler<SqlConnection>
+    public class ConnectionHandler : IHandler<SqlConnection>
     {
         public ConnectionHandler(string connectionString) => ConnectionString = connectionString;
 
