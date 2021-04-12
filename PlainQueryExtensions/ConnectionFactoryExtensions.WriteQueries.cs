@@ -9,7 +9,7 @@ using PlainQuery;
 
 namespace PlainQueryExtensions
 {
-    public static class ConnectionProviderExtensions
+    public static class ConnectionHandlerExtensions
     {
         public static async Task<TKey> Insert<TKey>(this IHandler<DbConnection> connectionHandler, object param)
         {
