@@ -24,12 +24,12 @@ namespace PlainQueryExtensions
                     {
                         reader.CheckMapping<T>();
 
-                        var materializer = reader.GetMaterializer<T>();
+                        var materializer = reader.GetMaterializer<T>(command);
 
                         var result = new List<T>();
 
                         while (await reader.ReadAsync())
-                            result.Add(materializer());
+                            result.Add(materializer(reader));
 
                         return result;
                     }

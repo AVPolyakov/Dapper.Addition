@@ -10,8 +10,8 @@ namespace PlainQueryExtensions.Tests
     {
         private static ConnectionHandler Db => DatabaseFixture.Db;
 
-        public MappingCheckTests() => global::PlainQueryExtensions.QueryExtensions.MappingCheckEnabled = true;
-        
+        public MappingCheckTests() => QueryExtensions.MappingCheckEnabled = true;
+
         [Fact]
         public async Task EmptyDestinationType_ExceptionThrown()
         {
@@ -20,7 +20,7 @@ namespace PlainQueryExtensions.Tests
             var exception = await Assert.ThrowsAsync<Exception>(
                 () => query.ToList<PostInfo2>(Db));
 
-            Assert.Equal(@"Count of fields does not match. Query has 3 fields. Destination type has 0 fields. You can copy list of properties to destination type:
+            Assert.Equal(@"Property 'PostId' not found in destination type. You can copy list of properties to destination type:
         public int PostId { get; set; }
         public string Text { get; set; }
         public DateTime CreationDate { get; set; }",
@@ -40,6 +40,16 @@ namespace PlainQueryExtensions.Tests
         public string Text { get; set; }
         public DateTime CreationDate { get; set; }",
                 exception.Message);
+        }
+        
+        [Fact]
+        public async Task IgnoredProperty_Success()
+        {
+            var query = new Query("SELECT p.PostId, p.Text, p.CreationDate FROM Post p");
+
+            var list = await query.ToList<PostInfo4>(Db);
+            
+            Assert.NotNull(list);
         }
         
         [Fact]

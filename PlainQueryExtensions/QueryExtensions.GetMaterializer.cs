@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.Common;
 using System.Linq;
 using System.Reflection;
@@ -9,113 +11,106 @@ namespace PlainQueryExtensions
 {
     public static partial class QueryExtensions
     {
-        /// <summary>
-        /// Generates in runtime the code to retrieve the data from DataReader for all properties of type T.
-        /// Returns the function that creates the instance of type T and populates the instance properties 
-        /// from DataReader.
-        /// </summary>
-        public static Func<T> GetMaterializer<T>(this DbDataReader reader) => Cache<T>.Func(reader);
-        
-        private static class Cache<T>
+        public static Func<DbDataReader, T> GetMaterializer<T>(this DbDataReader reader, DbCommand command)
         {
-            public static readonly Func<DbDataReader, Func<T>> Func;
+            var destinationType = typeof(T);
 
-            static Cache()
+            var key = new MaterializerKey(command.CommandText, command.CommandType, command?.Connection?.ConnectionString);
+
+            var dictionary = ReadCache<T>.Dictionary;
+            
+            if (dictionary.TryGetValue(key, out var func))
+                return func;
+
+            lock (dictionary)
             {
-                Func<DbDataReader, Func<T>> func;
-                
-                var readMethod = GetReadMethod(typeof(T));
+                var dynamicMethod = new DynamicMethod(System.Guid.NewGuid().ToString("N"), destinationType,
+                    new[] {typeof(DbDataReader)}, true);
+
+                var ilGenerator = dynamicMethod.GetILGenerator();
+                var readMethod = GetReadMethod(destinationType);
                 if (readMethod != null)
                 {
-                    var dynamicMethod = new DynamicMethod(System.Guid.NewGuid().ToString("N"), typeof(T),
-                        new[] {typeof(DbDataReader)}, true);
-                    
-                    var ilGenerator = dynamicMethod.GetILGenerator();
                     ilGenerator.Emit(OpCodes.Ldarg_0);
                     ilGenerator.Emit(OpCodes.Ldc_I4_0);
                     ilGenerator.EmitCall(readMethod.IsVirtual ? OpCodes.Callvirt : OpCodes.Call, readMethod, null);
                     ilGenerator.Emit(OpCodes.Ret);
-                    
-                    var @delegate = (Func<DbDataReader, T>) dynamicMethod.CreateDelegate(typeof(Func<DbDataReader, T>));
-                    func = reader => () => @delegate(reader);
                 }
                 else
                 {
-                    var typeBuilder = _moduleBuilder.DefineType("T" + System.Guid.NewGuid().ToString("N"), TypeAttributes.NotPublic,
-                        null, new[] {typeof(IMaterializer<T>)});
-                    
-                    var list = typeof(T).GetProperties(BindingFlags.Instance | BindingFlags.Public)
-                        .Select(property => Tuple.Create(property, typeBuilder.DefineField(property.Name, typeof(int), FieldAttributes.Public))).ToList();
-                    
-                    var methodBuilder = typeBuilder.DefineMethod(nameof(IMaterializer<object>.Materialize),
-                        MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.HideBySig | MethodAttributes.Final |
-                        MethodAttributes.NewSlot, typeof(T), new[] {typeof(DbDataReader)});
-                    
-                    var generator = methodBuilder.GetILGenerator();
-                    generator.DeclareLocal(typeof(T));
-                    generator.Emit(OpCodes.Newobj, typeof(T).GetConstructor(Array.Empty<Type>())!);
-                    generator.Emit(OpCodes.Stloc_0);
-                    foreach (var item in list)
+                    ilGenerator.Emit(OpCodes.Newobj, destinationType.GetConstructor(Array.Empty<Type>())!);
+                    var propertiesByName = destinationType.GetProperties().ToDictionary(_ => _.Name);
+                    for (var ordinal = 0; ordinal < reader.FieldCount; ordinal++)
                     {
-                        generator.Emit(OpCodes.Ldloc_0);
-                        generator.Emit(OpCodes.Ldarg_1);
-                        generator.Emit(OpCodes.Ldarg_0);
-                        generator.Emit(OpCodes.Ldfld, item.Item2);
-                        var method = GetReadMethod(item.Item1.PropertyType);
-                        if (method == null)
-                            throw new Exception($"Read method not fount for type '{item.Item1.PropertyType.FullName}'");
-                        generator.EmitCall(method.IsVirtual ? OpCodes.Callvirt : OpCodes.Call, method, null);
-                        generator.EmitCall(OpCodes.Callvirt, item.Item1.GetSetMethod()!, null);
-                    }
-                    generator.Emit(OpCodes.Ldloc_0);
-                    generator.Emit(OpCodes.Ret);
-                    
-                    var type = typeBuilder.CreateTypeInfo()!;
-                    var dynamicMethod = new DynamicMethod(System.Guid.NewGuid().ToString("N"), typeof(IMaterializer<T>),
-                        new[] {typeof(DbDataReader)}, true);
-                    var ilGenerator = dynamicMethod.GetILGenerator();
-                    ilGenerator.DeclareLocal(type);
-                    ilGenerator.Emit(OpCodes.Newobj, type.GetConstructor(Array.Empty<Type>())!);
-                    ilGenerator.Emit(OpCodes.Stloc_0);
-                    foreach (var fieldInfo in type.GetFields())
-                    {
-                        ilGenerator.Emit(OpCodes.Ldloc_0);
+                        if (!propertiesByName.TryGetValue(reader.GetName(ordinal), out var info))
+                            continue;
+
+                        ilGenerator.Emit(OpCodes.Dup);
                         ilGenerator.Emit(OpCodes.Ldarg_0);
-                        ilGenerator.Emit(OpCodes.Ldstr, fieldInfo.Name);
-                        ilGenerator.EmitCall(OpCodes.Call, GetMethodInfo<Func<DbDataReader, string, int>>((reader, name) => reader.Ordinal(name)), null);
-                        ilGenerator.Emit(OpCodes.Stfld, fieldInfo);
+                        EmitOrdinal(ilGenerator, ordinal);
+                        var method = GetReadMethod(info.PropertyType);
+                        if (method == null)
+                            throw new Exception($"Read method not fount for type '{info.PropertyType.FullName}'");
+                        ilGenerator.EmitCall(method.IsVirtual ? OpCodes.Callvirt : OpCodes.Call, method, null);
+                        ilGenerator.EmitCall(OpCodes.Callvirt, info.GetSetMethod()!, null);
                     }
-                    ilGenerator.Emit(OpCodes.Ldloc_0);
                     ilGenerator.Emit(OpCodes.Ret);
-                    
-                    var @delegate = (Func<DbDataReader, IMaterializer<T>>) dynamicMethod.CreateDelegate(typeof(Func<DbDataReader, IMaterializer<T>>));
-                    func = reader =>
-                    {
-                        var materializer = @delegate(reader);
-                        return () => materializer.Materialize(reader);
-                    };
                 }
-                
-                Func = func;
+
+                var @delegate = (Func<DbDataReader, T>) dynamicMethod.CreateDelegate(typeof(Func<DbDataReader, T>));
+
+                dictionary.TryAdd(key, @delegate);
+
+                return @delegate;
             }
         }
-        
-        public static int Ordinal(this DbDataReader reader, string name) => reader.GetOrdinal(name);
-        
-        public interface IMaterializer<out T>
+
+        private static class ReadCache<T>
         {
-            T Materialize(DbDataReader reader);
+            public static readonly ConcurrentDictionary<MaterializerKey, Func<DbDataReader, T>> Dictionary = new();
         }
 
-        private static readonly ModuleBuilder _moduleBuilder;
-
-        static QueryExtensions()
+        private record MaterializerKey(string CommandText, CommandType CommandType, string? ConnectionString)
         {
-            var assemblyName = new AssemblyName {Name = System.Guid.NewGuid().ToString("N")};
-            _moduleBuilder = AssemblyBuilder.DefineDynamicAssembly(assemblyName,
-                AssemblyBuilderAccess.Run).DefineDynamicModule(assemblyName.Name);
         }
         
+        private static void EmitOrdinal(ILGenerator ilGenerator, int ordinal)
+        {
+            switch (ordinal)
+            {
+                case 0:
+                    ilGenerator.Emit(OpCodes.Ldc_I4_0);
+                    break;
+                case 1:
+                    ilGenerator.Emit(OpCodes.Ldc_I4_1);
+                    break;
+                case 2:
+                    ilGenerator.Emit(OpCodes.Ldc_I4_2);
+                    break;
+                case 3:
+                    ilGenerator.Emit(OpCodes.Ldc_I4_3);
+                    break;
+                case 4:
+                    ilGenerator.Emit(OpCodes.Ldc_I4_4);
+                    break;
+                case 5:
+                    ilGenerator.Emit(OpCodes.Ldc_I4_5);
+                    break;
+                case 6:
+                    ilGenerator.Emit(OpCodes.Ldc_I4_6);
+                    break;
+                case 7:
+                    ilGenerator.Emit(OpCodes.Ldc_I4_7);
+                    break;
+                case 8:
+                    ilGenerator.Emit(OpCodes.Ldc_I4_8);
+                    break;
+                default:
+                    ilGenerator.Emit(OpCodes.Ldc_I4_S, ordinal);
+                    break;
+            }
+        }        
+
         private static MethodInfo? GetReadMethod(Type type)
         {
             if (ReadMethodInfos.TryGetValue(type, out var methodInfo))

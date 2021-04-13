@@ -31,32 +31,25 @@ namespace PlainQueryExtensions
 
             var readMethod = GetReadMethod(type);
 
-            var properties = type.GetProperties();
-
-            var queryFieldCount = reader.FieldCount;
-            var destinationFieldCount = readMethod != null ? 1 : properties.Length;
-            if (queryFieldCount != destinationFieldCount)
-                throw reader.GetException($"Count of fields does not match. Query has {queryFieldCount} fields. Destination type has {destinationFieldCount} fields.");
-
-            var fieldDictionary = Enumerable.Range(0, reader.FieldCount).ToDictionary(reader.GetName, i => i);
-
-            foreach (var property in properties)
+            if (readMethod != null)
             {
-                int ordinal;
-                Type destinationType;
-                if (readMethod != null)
-                {
-                    ordinal = 0;
-                    destinationType = type;
-                }
-                else
-                {
-                    if (!fieldDictionary.TryGetValue(property.Name, out ordinal))
-                        throw reader.GetException($"Field '{property.Name}' not found in query.'");
-                    destinationType = property.PropertyType;
-                }
+                if (reader.FieldCount > 1)
+                    throw reader.GetException($"Count of fields is greater than one. Query has {reader.FieldCount} fields.");
+                
+                CheckFieldType(reader, 0, type);
+            }
+            else
+            {
+                var propertiesByName = type.GetProperties().ToDictionary(_ => _.Name);
 
-                CheckFieldType(reader, ordinal, destinationType);
+                for (var ordinal = 0; ordinal < reader.FieldCount; ordinal++)
+                {
+                    var name = reader.GetName(ordinal);
+                    if (!propertiesByName.TryGetValue(name, out var value))
+                        throw reader.GetException($"Property '{name}' not found in destination type.");
+
+                    CheckFieldType(reader, ordinal, value.PropertyType);
+                }
             }
         }
 
