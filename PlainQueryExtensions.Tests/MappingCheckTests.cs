@@ -20,7 +20,7 @@ namespace PlainQueryExtensions.Tests
             var exception = await Assert.ThrowsAsync<Exception>(
                 () => query.ToList<PostInfo2>(Db));
 
-            Assert.Equal(@"Property 'PostId' not found in destination type. You can copy list of properties to destination type:
+            Assert.Equal(@"Property 'PostId' not found in destination type. You can copy list of properties to destination type PlainQueryExtensions.Tests.PostInfo2:
         public int PostId { get; set; }
         public string Text { get; set; }
         public DateTime CreationDate { get; set; }",
@@ -35,7 +35,7 @@ namespace PlainQueryExtensions.Tests
             var exception = await Assert.ThrowsAsync<Exception>(
                 () => query.ToList<PostInfo3>(Db));
 
-            Assert.Equal(@"Type of field 'PostId' does not match. Field type is 'long' in destination and `int` with AllowDbNull='False' in query. You can copy list of properties to destination type:
+            Assert.Equal(@"Type of field 'PostId' does not match. Field type is 'long' in destination and `int` with AllowDbNull='False' in query. You can copy list of properties to destination type PlainQueryExtensions.Tests.PostInfo3:
         public int PostId { get; set; }
         public string Text { get; set; }
         public DateTime CreationDate { get; set; }",
@@ -60,7 +60,7 @@ namespace PlainQueryExtensions.Tests
             var exception = await Assert.ThrowsAsync<Exception>(
                 () => Db.Insert<long>(post));
 
-            Assert.Equal(@"Type of field 'PostId' does not match. Field type is 'long' in destination and `int` with AllowDbNull='False' in query. You can copy list of properties to destination type:
+            Assert.Equal(@"Type of field 'PostId' does not match. Field type is 'long' in destination and `int` with AllowDbNull='False' in query. You can copy list of properties to destination type PlainQueryExtensions.Tests.Namaspace2.Post:
         public int PostId { get; set; }
         public string Text { get; set; }
         public DateTime CreationDate { get; set; }",

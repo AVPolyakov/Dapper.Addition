@@ -34,9 +34,9 @@ namespace PlainQueryExtensions
             if (readMethod != null)
             {
                 if (reader.FieldCount > 1)
-                    throw reader.GetException($"Count of fields is greater than one. Query has {reader.FieldCount} fields.");
+                    throw reader.GetException($"Count of fields is greater than one. Query has {reader.FieldCount} fields.", type);
                 
-                CheckFieldType(reader, 0, type);
+                CheckFieldType(reader, 0, type, type);
             }
             else
             {
@@ -46,14 +46,14 @@ namespace PlainQueryExtensions
                 {
                     var name = reader.GetName(ordinal);
                     if (!propertiesByName.TryGetValue(name, out var value))
-                        throw reader.GetException($"Property '{name}' not found in destination type.");
+                        throw reader.GetException($"Property '{name}' not found in destination type.", type);
 
-                    CheckFieldType(reader, ordinal, value.PropertyType);
+                    CheckFieldType(reader, ordinal, value.PropertyType, type);
                 }
             }
         }
 
-        private static void CheckFieldType(DbDataReader reader, int ordinal, Type destinationType)
+        private static void CheckFieldType(DbDataReader reader, int ordinal, Type destinationType, Type type)
         {
             var fieldType = reader.GetFieldType(ordinal);
             var allowDbNull = AllowDbNull(reader, ordinal);
@@ -82,13 +82,13 @@ namespace PlainQueryExtensions
                 var name = reader.GetName(ordinal);
                 var destinationTypeName = destinationType.GetCSharpName();
                 var fieldTypeName = fieldType.GetCSharpName();
-                return reader.GetException($"Type of field '{name}' does not match. Field type is '{destinationTypeName}' in destination and `{fieldTypeName}` with AllowDbNull='{allowDbNull}' in query.");
+                return reader.GetException($"Type of field '{name}' does not match. Field type is '{destinationTypeName}' in destination and `{fieldTypeName}` with AllowDbNull='{allowDbNull}' in query.", type);
             }
         }
 
-        private static Exception GetException(this DbDataReader reader, string message)
+        private static Exception GetException(this DbDataReader reader, string message, Type type)
         {
-            return new($@"{message} You can copy list of properties to destination type:
+            return new($@"{message} You can copy list of properties to destination type {type.FullName}:
 {GenerateDestinationProperties(reader)}");
         }
 
