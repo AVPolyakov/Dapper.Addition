@@ -14,3 +14,8 @@ CREATE TABLE Table2 (
     Text NVARCHAR(MAX) NULL,
     ComputedColumn1 AS 1
 );
+
+CREATE TABLE Comments (
+    Id INT IDENTITY PRIMARY KEY,
+    Text NVARCHAR(MAX) NULL
+);

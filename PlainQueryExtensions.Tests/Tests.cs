@@ -130,11 +130,28 @@ WHERE p.CreationDate >= @fromDate
                 Assert.Equal("Test", await new Query("SELECT Text FROM Table2 WHERE Id = @id", new {id}).Single<string>(Db));
             }
             {
-                var entity = await Db.GetByKey<Table2>(new {Id = id});
+                var entity = await Db.GetByKey<Table2>(new {Id = id});  
                 Assert.Equal(1, entity.ComputedColumn1);
                 entity.Text = "Test2";
                 await Db.Update(entity);
                 Assert.Equal("Test2", await new Query("SELECT Text FROM Table2 WHERE Id = @id", new {id}).Single<string>(Db));
+            }
+        }
+        
+        [Fact]
+        public async Task InsertUpdate_CustomTableName_Success()
+        {
+            int id;
+            {
+                var entity = new Comment{Text = "Test"};
+                id = await Db.Insert<int>(entity);
+                Assert.Equal("Test", await new Query("SELECT Text FROM Comments WHERE Id = @id", new {id}).Single<string>(Db));
+            }
+            {
+                var entity = await Db.GetByKey<Comment>(new {Id = id});
+                entity.Text = "Test2";
+                await Db.Update(entity);
+                Assert.Equal("Test2", await new Query("SELECT Text FROM Comments WHERE Id = @id", new {id}).Single<string>(Db));
             }
         }
     }

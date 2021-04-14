@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using PlainQuery;
 
@@ -94,8 +95,21 @@ WHERE {whereClause}", param);
             return await query.Single<T>(connectionHandler);
         }        
 
-        private static string GetTableName(Type type) => type.Name;
+        private static string GetTableName(Type type)
+        {
+            if (_tableNameDictionary.TryGetValue(type, out var value))
+                return value;
+            
+            var tableAttributeName = type.GetCustomAttribute<TableAttribute>()?.Name;
+            var tableName = tableAttributeName ?? type.Name;
 
+            _tableNameDictionary.TryAdd(type, tableName);
+            
+            return tableName;
+        }
+        
+        private static readonly ConcurrentDictionary<Type, string> _tableNameDictionary = new();
+        
         private static readonly ConcurrentDictionary<TableKey, List<ColumnInfo>> _columnDictionary = new();
         
         private static async Task<List<ColumnInfo>> GetColumns(string table, IHandler<DbConnection> connectionHandler, Type type)
