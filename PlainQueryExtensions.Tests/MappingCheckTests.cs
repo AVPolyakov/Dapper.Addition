@@ -10,7 +10,7 @@ namespace PlainQueryExtensions.Tests
     {
         private static ConnectionHandler Db => DatabaseFixture.Db;
 
-        public MappingCheckTests() => QueryExtensions.MappingCheckEnabled = true;
+        public MappingCheckTests() => MappingCheckSettings.MappingCheckEnabled = true;
 
         [Fact]
         public async Task EmptyDestinationType_ExceptionThrown()

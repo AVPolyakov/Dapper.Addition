@@ -2,68 +2,48 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
 using System.Threading.Tasks;
+using Dapper;
 using PlainQuery;
 
 namespace PlainQueryExtensions
 {
-    public static partial class QueryExtensions
+    public static class QueryExtensions
     {
-        public static Task<List<T>> ToList<T>(this Query query, IHandler<DbConnection> connectionHandler)
+        public static async Task<List<T>> ToList<T>(this Query query, IHandler<DbConnection> connectionHandler)
         {
-            return connectionHandler.Handle(async connection =>
-            {
-                await connection.OpenIfClosed();
-
-                await using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = query.StringBuilder.ToString();
-
-                    AddParams(command, query);
-
-                    await using (var reader = await command.ExecuteReaderAsync())
-                    {
-                        reader.CheckMapping<T>();
-
-                        var materializer = reader.GetMaterializer<T>(command);
-
-                        var result = new List<T>();
-
-                        while (await reader.ReadAsync())
-                            result.Add(materializer(reader));
-
-                        return result;
-                    }
-                }
-            });
+            var enumerable = await connectionHandler.QueryAsync<T>(query);
+            return enumerable.AsList();
         }
         
-        public static async Task<T> Single<T>(this Query query, IHandler<DbConnection> connectionHandler)
+        public static async Task<T[]> ToArray<T>(this Query query, IHandler<DbConnection> connectionHandler)
         {
-            var list = await query.ToList<T>(connectionHandler);
-            return list.Single();
+            var enumerable = await connectionHandler.QueryAsync<T>(query);
+            return enumerable.ToArray();
         }
-
-        public static async Task<T?> SingleOrDefault<T>(this Query query, IHandler<DbConnection> connectionHandler)
+        
+        public static Task<T> Single<T>(this Query query, IHandler<DbConnection> connectionHandler)
         {
-            var list = await query.ToList<T>(connectionHandler);
-            return list.SingleOrDefault();
+            return connectionHandler.QuerySingleAsync<T>(query);
         }
-
+        
+        public static Task<T> SingleOrDefault<T>(this Query query, IHandler<DbConnection> connectionHandler)
+        {
+            return connectionHandler.QuerySingleOrDefaultAsync<T>(query);
+        }
+        
+        public static Task<T> First<T>(this Query query, IHandler<DbConnection> connectionHandler)
+        {
+            return connectionHandler.QueryFirstAsync<T>(query);
+        }
+        
+        public static Task<T> FirstOrDefault<T>(this Query query, IHandler<DbConnection> connectionHandler)
+        {
+            return connectionHandler.QueryFirstOrDefaultAsync<T>(query);
+        }
+        
         public static Task<int> Execute(this Query query, IHandler<DbConnection> connectionHandler)
         {
-            return connectionHandler.Handle(async connection =>
-            {
-                await connection.OpenIfClosed();
-
-                await using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = query.StringBuilder.ToString();
-
-                    AddParams(command, query);
-
-                    return await command.ExecuteNonQueryAsync();
-                }
-            });
+            return connectionHandler.ExecuteAsync(query);
         }
     }
 }

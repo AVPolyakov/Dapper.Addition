@@ -9,7 +9,7 @@ using PlainQuery;
 
 namespace PlainQueryExtensions
 {
-    public static class ConnectionHandlerExtensions
+    public static partial class ConnectionHandlerExtensions
     {
         public static async Task<TKey> Insert<TKey>(this IHandler<DbConnection> connectionHandler, object param)
         {
@@ -117,7 +117,7 @@ WHERE {whereClause}", param);
         {
             return connectionHandler.Handle(async connection =>
             {
-                await connection.OpenIfClosed();
+                await connection.OpenIfClosedAsync();
 
                 await using (var command = connection.CreateCommand())
                 {

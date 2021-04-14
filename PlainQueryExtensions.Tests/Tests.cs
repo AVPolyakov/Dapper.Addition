@@ -11,7 +11,7 @@ namespace PlainQueryExtensions.Tests
     {
         private static ConnectionHandler Db => DatabaseFixture.Db;
 
-        public Tests() => QueryExtensions.MappingCheckEnabled = true;
+        public Tests() => MappingCheckSettings.MappingCheckEnabled = true;
 
         [Fact]
         public async Task Posts_Success()
@@ -55,61 +55,13 @@ ORDER BY p.PostId", new {date});
         {
             var query = new Query(@"
 SELECT p.PostId, p.Text, p.CreationDate
-FROM Post p");
+FROM Post p
+WHERE 1 = 1");
             if (date.HasValue)
                 query.Append(@"
-WHERE p.CreationDate >= @date", new {date});
+    AND p.CreationDate >= @date", new {date});
 
             return query.ToList<PostInfo>(Db);
-        }
-
-        [Fact]
-        public async Task ScalarType_Success()
-        {
-            var single = await new Query("SELECT @A1 AS A1",
-                    new
-                    {
-                        A1 = "Test3"
-                    })
-                .Single<string>(Db);
-            
-            Assert.Equal("Test3", single);
-        }        
-        
-        [Fact]
-        public async Task Enum_Success()
-        {
-            Enum1? a2 = Enum1.Item2;
-            Enum1? a3 = null;
-            Enum2? a5 = Enum2.Item2;
-            Enum2? a6 = null;
-            
-            var record1 = await new Query(@"
-SELECT 
-    @A1 AS A1,
-    @A2 AS A2,
-    @A3 AS A3,
-    @A4 AS A4,
-    @A5 AS A5,
-    @A6 AS A6
-",
-                    new
-                    {
-                        A1 = Enum1.Item2,
-                        A2 = a2,
-                        A3 = a3,
-                        A4 = Enum2.Item2,
-                        A5 = a5,
-                        A6 = a6,
-                    })
-                .Single<Record1>(Db);
-            
-            Assert.Equal(Enum1.Item2, record1.A1);
-            Assert.Equal(a2, record1.A2);
-            Assert.Equal(a3, record1.A3);
-            Assert.Equal(Enum2.Item2, record1.A4);
-            Assert.Equal(a5, record1.A5);
-            Assert.Equal(a6, record1.A6);
         }
         
         [Fact]
@@ -141,7 +93,7 @@ SELECT
         }
         
         [Fact]
-        public async Task SubQuery_Success()
+        public async Task Subquery_Success()
         {
             var toDate = new DateTime(2050, 1, 1);
 
