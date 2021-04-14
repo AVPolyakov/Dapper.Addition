@@ -154,5 +154,17 @@ WHERE p.CreationDate >= @fromDate
                 Assert.Equal("Test2", await new Query("SELECT Text FROM Comments WHERE Id = @id", new {id}).Single<string>(Db));
             }
         }
+        
+        [Fact]
+        public async Task Insert_Success()
+        {
+            var id = 5;
+            var entity = new Table3 {Id = id, Text = "Test"};
+            await Db.Insert(entity);
+            Assert.Equal("Test", await new Query("SELECT Text FROM Table3 WHERE Id = @id", new {id}).Single<string>(Db));
+
+            var rowCount = await Db.Delete<Table3>(new {Id = id});
+            Assert.Equal(1, rowCount);
+        }
     }
 }

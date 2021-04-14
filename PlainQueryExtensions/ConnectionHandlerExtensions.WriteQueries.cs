@@ -19,11 +19,13 @@ namespace PlainQueryExtensions
             var columnInfos = await GetColumns(table, connectionHandler, type);
             var notAutoIncrementColumns = columnInfos
                 .Where(_ => !_.IsAutoIncrement && !_.IsComputed)
-                .Select(_ => _.ColumnName)
                 .ToList();
-            var columnsClause = string.Join(",", notAutoIncrementColumns);
-            var outClause = columnInfos.Single(_ => _.IsAutoIncrement).ColumnName;
-            var valuesClause = string.Join(",", notAutoIncrementColumns.Select(_ => $"@{_}"));
+            var columnsClause = string.Join(",", notAutoIncrementColumns.Select(_ => _.ColumnName));
+            var autoIncrementColumn = columnInfos.SingleOrDefault(_ => _.IsAutoIncrement);
+            if (autoIncrementColumn == null)
+                throw new Exception("Auto increment column not found.");
+            var outClause = autoIncrementColumn.ColumnName;
+            var valuesClause = string.Join(",", notAutoIncrementColumns.Select(_ => $"@{_.ColumnName}"));
             var query = new Query($@"
 INSERT INTO {table} ({columnsClause}) 
 OUTPUT inserted.{outClause}
@@ -38,10 +40,9 @@ VALUES ({valuesClause})", param);
             var columnInfos = await GetColumns(table, connectionHandler, type);
             var columns = columnInfos
                 .Where(_ => !_.IsAutoIncrement && !_.IsComputed)
-                .Select(_ => _.ColumnName)
                 .ToList();
-            var columnsClause = string.Join(",", columns);
-            var valuesClause = string.Join(",", columns.Select(_ => $"@{_}"));
+            var columnsClause = string.Join(",", columns.Select(_ => _.ColumnName));
+            var valuesClause = string.Join(",", columns.Select(_ => $"@{_.ColumnName}"));
             var query = new Query($@"
 INSERT INTO {table} ({columnsClause}) 
 VALUES ({valuesClause})", param);
