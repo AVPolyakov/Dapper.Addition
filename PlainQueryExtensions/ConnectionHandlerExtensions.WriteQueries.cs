@@ -17,7 +17,7 @@ namespace PlainQueryExtensions
             var table = GetTableName(type);
             var columnInfos = await GetColumns(table, connectionHandler, type);
             var notAutoIncrementColumns = columnInfos
-                .Where(_ => !_.IsAutoIncrement)
+                .Where(_ => !_.IsAutoIncrement && !_.IsComputed)
                 .Select(_ => _.ColumnName)
                 .ToList();
             var columnsClause = string.Join(",", notAutoIncrementColumns);
@@ -36,6 +36,7 @@ VALUES ({valuesClause})", param);
             var table = GetTableName(type);
             var columnInfos = await GetColumns(table, connectionHandler, type);
             var columns = columnInfos
+                .Where(_ => !_.IsAutoIncrement && !_.IsComputed)
                 .Select(_ => _.ColumnName)
                 .ToList();
             var columnsClause = string.Join(",", columns);
@@ -53,7 +54,7 @@ VALUES ({valuesClause})", param);
             var columnInfos = await GetColumns(table, connectionHandler, type);
             var setClause = string.Join(",",
                 columnInfos
-                    .Where(_ => !_.IsKey)
+                    .Where(_ => !_.IsKey && !_.IsComputed)
                     .Select(_ => $"{_.ColumnName}=@{_.ColumnName}"));
             var whereClause = string.Join(" AND ", 
                 columnInfos.Where(_ => _.IsKey).Select(_ => $"{_.ColumnName}=@{_.ColumnName}"));
@@ -119,6 +120,15 @@ WHERE {whereClause}", param);
             {
                 await connection.OpenIfClosedAsync();
 
+                var computedColumns = new HashSet<string>();
+                await using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = $"SELECT name FROM sys.computed_columns WHERE object_id = OBJECT_ID('{table}')";
+                    await using (var reader = await command.ExecuteReaderAsync())
+                        while (await reader.ReadAsync())
+                            computedColumns.Add(reader.GetString(0));
+                }
+                
                 await using (var command = connection.CreateCommand())
                 {
                     command.CommandText = $"SELECT * FROM {table}";
@@ -129,17 +139,22 @@ WHERE {whereClause}", param);
                         var schemaTable = await reader.GetSchemaTableAsync();
 
                         return schemaTable!.Rows.Cast<DataRow>()
-                            .Select(row => new ColumnInfo(
-                                (string) row["ColumnName"],
-                                true.Equals(row["IsKey"]),
-                                true.Equals(row["IsAutoIncrement"])))
+                            .Select(row =>
+                            {
+                                var columnName = (string) row["ColumnName"];
+                                return new ColumnInfo(
+                                    columnName,
+                                    true.Equals(row["IsKey"]),
+                                    true.Equals(row["IsAutoIncrement"]),
+                                    computedColumns.Contains(columnName));
+                            })
                             .ToList();
                     }
                 }
             });
         }
         
-        private record ColumnInfo(string ColumnName, bool IsKey, bool IsAutoIncrement)
+        private record ColumnInfo(string ColumnName, bool IsKey, bool IsAutoIncrement, bool IsComputed)
         {
         }
     }

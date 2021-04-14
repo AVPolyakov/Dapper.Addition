@@ -119,5 +119,23 @@ FROM Post p
 WHERE p.CreationDate >= @fromDate
 ", new {fromDate});
         }
+
+        [Fact]
+        public async Task InsertUpdate_ComputedColumn1_Success()
+        {
+            int id;
+            {
+                var entity = new Table2{Text = "Test"};
+                id = await Db.Insert<int>(entity);
+                Assert.Equal("Test", await new Query("SELECT Text FROM Table2 WHERE Id = @id", new {id}).Single<string>(Db));
+            }
+            {
+                var entity = await Db.GetByKey<Table2>(new {Id = id});
+                Assert.Equal(1, entity.ComputedColumn1);
+                entity.Text = "Test2";
+                await Db.Update(entity);
+                Assert.Equal("Test2", await new Query("SELECT Text FROM Table2 WHERE Id = @id", new {id}).Single<string>(Db));
+            }
+        }
     }
 }
