@@ -374,16 +374,16 @@ namespace PlainQueryExtensions
 
         public static readonly Dictionary<Type, MethodInfo> AddParamsMethods = new[]
             {
-                GetMethodInfo<Func<DbCommand, string, int, DbParameter>>((command, name, value) => command.AddParam(name, value)),
-                GetMethodInfo<Func<DbCommand, string, int?, DbParameter>>((command, name, value) => command.AddParam(name, value)),
-                GetMethodInfo<Func<DbCommand, string, bool, DbParameter>>((command, name, value) => command.AddParam(name, value)),
-                GetMethodInfo<Func<DbCommand, string, bool?, DbParameter>>((command, name, value) => command.AddParam(name, value)),
                 GetMethodInfo<Func<DbCommand, string, byte, DbParameter>>((command, name, value) => command.AddParam(name, value)),
                 GetMethodInfo<Func<DbCommand, string, byte?, DbParameter>>((command, name, value) => command.AddParam(name, value)),
+                GetMethodInfo<Func<DbCommand, string, int, DbParameter>>((command, name, value) => command.AddParam(name, value)),
+                GetMethodInfo<Func<DbCommand, string, int?, DbParameter>>((command, name, value) => command.AddParam(name, value)),
                 GetMethodInfo<Func<DbCommand, string, long, DbParameter>>((command, name, value) => command.AddParam(name, value)),
                 GetMethodInfo<Func<DbCommand, string, long?, DbParameter>>((command, name, value) => command.AddParam(name, value)),
                 GetMethodInfo<Func<DbCommand, string, decimal, DbParameter>>((command, name, value) => command.AddParam(name, value)),
                 GetMethodInfo<Func<DbCommand, string, decimal?, DbParameter>>((command, name, value) => command.AddParam(name, value)),
+                GetMethodInfo<Func<DbCommand, string, bool, DbParameter>>((command, name, value) => command.AddParam(name, value)),
+                GetMethodInfo<Func<DbCommand, string, bool?, DbParameter>>((command, name, value) => command.AddParam(name, value)),
                 GetMethodInfo<Func<DbCommand, string, Guid, DbParameter>>((command, name, value) => command.AddParam(name, value)),
                 GetMethodInfo<Func<DbCommand, string, Guid?, DbParameter>>((command, name, value) => command.AddParam(name, value)),
                 GetMethodInfo<Func<DbCommand, string, DateTime, DbParameter>>((command, name, value) => command.AddParam(name, value)),
@@ -405,7 +405,7 @@ namespace PlainQueryExtensions
             return parameter;
         }
         
-        private static DbParameter AddDBNull(this DbCommand command, string parameterName, DbType dbType)
+        private static DbParameter AddDbNull(this DbCommand command, string parameterName, DbType dbType)
         {
             var parameter = command.CreateParameter();
             parameter.ParameterName = parameterName;
@@ -415,43 +415,30 @@ namespace PlainQueryExtensions
             return parameter;
         }
         
-        public static DbParameter AddParam(this DbCommand command, string parameterName, int? value) 
-            => value.HasValue 
-                ? AddParam(command, parameterName, value.Value) 
-                : command.AddDBNull(parameterName, DbType.Int32);
+        public static DbParameter AddParam(this DbCommand command, string parameterName, byte value)
+            => command.AddParameterWithValue(parameterName, value);
         
-        public static DbParameter AddParam(this DbCommand command, string parameterName, int value)
-            => command.AddParameterWithValue(parameterName, value);
-
-        public static DbParameter AddParam(this DbCommand command, string parameterName, bool? value)
-            => value.HasValue
-                ? command.AddParam(parameterName, value.Value)
-                : command.AddDBNull(parameterName, DbType.Boolean);
-
-        public static DbParameter AddParam(this DbCommand command, string parameterName, bool value)
-            => command.AddParameterWithValue(parameterName, value);
-
         public static DbParameter AddParam(this DbCommand command, string parameterName, byte? value)
             => value.HasValue
                 ? command.AddParam(parameterName, value.Value)
-                : command.AddDBNull(parameterName, DbType.Byte);
-
-        public static DbParameter AddParam(this DbCommand command, string parameterName, byte value)
+                : command.AddDbNull(parameterName, DbType.Byte);
+        
+        public static DbParameter AddParam(this DbCommand command, string parameterName, int value)
             => command.AddParameterWithValue(parameterName, value);
-
+        
+        public static DbParameter AddParam(this DbCommand command, string parameterName, int? value) 
+            => value.HasValue 
+                ? AddParam(command, parameterName, value.Value) 
+                : command.AddDbNull(parameterName, DbType.Int32);
+        
+        public static DbParameter AddParam(this DbCommand command, string parameterName, long value)
+            => command.AddParameterWithValue(parameterName, value);
+        
         public static DbParameter AddParam(this DbCommand command, string parameterName, long? value)
             => value.HasValue
                 ? command.AddParam(parameterName, value.Value)
-                : command.AddDBNull(parameterName, DbType.Int64);
-
-        public static DbParameter AddParam(this DbCommand command, string parameterName, long value)
-            => command.AddParameterWithValue(parameterName, value);
-
-        public static DbParameter AddParam(this DbCommand command, string parameterName, decimal? value)
-            => value.HasValue
-                ? command.AddParam(parameterName, value.Value)
-                : command.AddDBNull(parameterName, DbType.Decimal);
-
+                : command.AddDbNull(parameterName, DbType.Int64);
+        
         public static DbParameter AddParam(this DbCommand command, string parameterName, decimal value)
         {
             var parameter = command.AddParameterWithValue(parameterName, value);
@@ -461,27 +448,40 @@ namespace PlainQueryExtensions
             if (parameter.Scale < defaultScale) parameter.Scale = 8;
             return parameter;
         }
+        
+        public static DbParameter AddParam(this DbCommand command, string parameterName, decimal? value)
+            => value.HasValue
+                ? command.AddParam(parameterName, value.Value)
+                : command.AddDbNull(parameterName, DbType.Decimal);
 
+        public static DbParameter AddParam(this DbCommand command, string parameterName, bool value)
+            => command.AddParameterWithValue(parameterName, value);
+        
+        public static DbParameter AddParam(this DbCommand command, string parameterName, bool? value)
+            => value.HasValue
+                ? command.AddParam(parameterName, value.Value)
+                : command.AddDbNull(parameterName, DbType.Boolean);
+        
         public static DbParameter AddParam(this DbCommand command, string parameterName, Guid value)
             => command.AddParameterWithValue(parameterName, value);
 
         public static DbParameter AddParam(this DbCommand command, string parameterName, Guid? value)
             => value.HasValue
                 ? command.AddParam(parameterName, value.Value)
-                : command.AddDBNull(parameterName, DbType.Guid);
-
-        public static DbParameter AddParam(this DbCommand command, string parameterName, DateTime? value)
-            => value.HasValue
-                ? command.AddParam(parameterName, value.Value)
-                : command.AddDBNull(parameterName, DbType.DateTime);
+                : command.AddDbNull(parameterName, DbType.Guid);
 
         public static DbParameter AddParam(this DbCommand command, string parameterName, DateTime value)
             => command.AddParameterWithValue(parameterName, value);
-
+        
+        public static DbParameter AddParam(this DbCommand command, string parameterName, DateTime? value)
+            => value.HasValue
+                ? command.AddParam(parameterName, value.Value)
+                : command.AddDbNull(parameterName, DbType.DateTime);
+        
         public static DbParameter AddParam(this DbCommand command, string parameterName, string? value)
         {
             var parameter = value == null
-                ? command.AddDBNull(parameterName, DbType.String)
+                ? command.AddDbNull(parameterName, DbType.String)
                 : command.AddParameterWithValue(parameterName, value);
             if (parameter.Size < DefaultLength && parameter.Size >= 0) parameter.Size = DefaultLength;
             return parameter;
@@ -489,7 +489,7 @@ namespace PlainQueryExtensions
 
         public static DbParameter AddParam(this DbCommand command, string parameterName, byte[]? value)
             => value == null
-                ? command.AddDBNull(parameterName, DbType.Binary)
+                ? command.AddDbNull(parameterName, DbType.Binary)
                 : command.AddParameterWithValue(parameterName, value);
         
         public const int DefaultLength = 4000;
