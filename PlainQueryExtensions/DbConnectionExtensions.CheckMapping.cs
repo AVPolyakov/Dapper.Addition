@@ -133,6 +133,7 @@ namespace PlainQueryExtensions
                 typeof(string),
                 typeof(bool),
                 typeof(bool?),
+                typeof(byte[]),
             }
             .ToHashSet();
         
@@ -388,6 +389,7 @@ namespace PlainQueryExtensions
                 GetMethodInfo<Func<DbCommand, string, DateTime, DbParameter>>((command, name, value) => command.AddParam(name, value)),
                 GetMethodInfo<Func<DbCommand, string, DateTime?, DbParameter>>((command, name, value) => command.AddParam(name, value)),
                 GetMethodInfo<Func<DbCommand, string, string?, DbParameter>>((command, name, value) => command.AddParam(name, value)),
+                GetMethodInfo<Func<DbCommand, string, byte[]?, DbParameter>>((command, name, value) => command.AddParam(name, value)),
             }
             .ToDictionary(methodInfo => methodInfo.GetParameters()[2].ParameterType);
 
@@ -485,6 +487,11 @@ namespace PlainQueryExtensions
             return parameter;
         }
 
+        public static DbParameter AddParam(this DbCommand command, string parameterName, byte[]? value)
+            => value == null
+                ? command.AddDBNull(parameterName, DbType.Binary)
+                : command.AddParameterWithValue(parameterName, value);
+        
         public const int DefaultLength = 4000;
 
         private static readonly MethodInfo _intEnumParam = GetMethodInfo<Func<DbCommand, string, BindingFlags, DbParameter>>(
