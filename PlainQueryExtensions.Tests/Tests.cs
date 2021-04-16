@@ -166,5 +166,21 @@ WHERE p.CreationDate >= @fromDate
             var rowCount = await Db.Delete<Table3>(new {Id = id});
             Assert.Equal(1, rowCount);
         }
+        
+        [Fact]
+        public async Task MatchNamesWithUnderscores_Success()
+        {
+            Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
+
+            Assert.Equal("Test1", (await new Query("SELECT * FROM Table4 WHERE Id = @id", new {id = 1}).Single<Table4>(Db)).FirstName);
+            
+            await Db.Delete<Table4>(new {Id = 2});
+            
+            var entity = new Table4 {Id = 2, FirstName = "Test2"};
+            await Db.Insert(entity);
+            Assert.Equal("Test2", (await new Query("SELECT Id, first_name FROM Table4 WHERE Id = @id", new {id = 2}).Single<Table4>(Db)).FirstName);
+
+            Dapper.DefaultTypeMap.MatchNamesWithUnderscores = false;
+        }
     }
 }

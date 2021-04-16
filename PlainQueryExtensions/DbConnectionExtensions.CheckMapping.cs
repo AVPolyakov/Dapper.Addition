@@ -60,17 +60,45 @@ namespace PlainQueryExtensions
             }
             else
             {
-                var propertiesByName = type.GetProperties().ToDictionary(_ => _.Name);
+                var properties = type.GetProperties();
+                var propertiesByName = properties.ToDictionary(_ => _.Name);
 
                 for (var ordinal = 0; ordinal < reader.FieldCount; ordinal++)
                 {
                     var name = reader.GetName(ordinal);
-                    if (!propertiesByName.TryGetValue(name, out var value))
-                        throw reader.GetException($"Property '{name}' not found in destination type.", type);
+                    PropertyInfo propertyInfo;
+                    if (propertiesByName.TryGetValue(name, out var value))
+                        propertyInfo = value;
+                    else
+                    {
+                        var property = FindProperty(properties, name);
+                        if (property == null)
+                            throw reader.GetException($"Property '{name}' not found in destination type.", type);
+                        propertyInfo = property;
+                    }
 
-                    CheckFieldType(reader, ordinal, value.PropertyType, type);
+                    CheckFieldType(reader, ordinal, propertyInfo.PropertyType, type);
                 }
             }
+        }
+
+        internal static string EntityColumnName(this string name, Type type)
+        {
+            var properties = type.GetProperties();
+
+            if (properties.All(p => p.Name != name))
+            {
+                var property = FindProperty(properties, name);
+                if (property != null)
+                    return property.Name;
+            }
+
+            return name;
+        }
+
+        private static PropertyInfo? FindProperty(PropertyInfo[] properties, string name)
+        {
+            return properties.SingleOrDefault(p => string.Equals(p.Name, name.Replace("_", ""), StringComparison.OrdinalIgnoreCase));
         }
 
         private static bool ReadTypeIsScalar(this Type type)
@@ -157,10 +185,40 @@ namespace PlainQueryExtensions
                         ? typeof(Nullable<>).MakeGenericType(reader.GetFieldType(i))
                         : reader.GetFieldType(i);
                     var typeName = type.GetCSharpName();
-                    return $"        public {typeName} {reader.GetName(i)} {{ get; set; }}";
+                    return $"        public {typeName} {reader.GetName(i).EntityColumnName()} {{ get; set; }}";
                 }));
         }
-        
+
+        private static string EntityColumnName(this string name)
+        {
+            return Dapper.DefaultTypeMap.MatchNamesWithUnderscores ? name.ToCamelCase() : name;
+        }
+
+        private static string ToCamelCase(this string name)
+        {
+            IEnumerable<char> Enumerate()
+            {
+                var toUpper = true;
+                foreach (var c in name.ToLower())
+                {
+                    if (toUpper)
+                    {
+                        toUpper = false;
+                        yield return char.ToUpper(c);
+                    }
+                    else
+                    {
+                        if (c == '_')
+                            toUpper = true;
+                        else
+                            yield return c;
+                    }
+                }
+            }
+
+            return new string(Enumerate().ToArray());
+        }
+
         private static bool TypesAreCompatible(Type dbType, Type type)
         {
             if (type.IsEnum && dbType == Enum.GetUnderlyingType(type)) 

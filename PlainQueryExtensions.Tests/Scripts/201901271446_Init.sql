@@ -25,3 +25,10 @@ CREATE TABLE Table3 (
     Text NVARCHAR(MAX) NULL
 );
 
+CREATE TABLE Table4 (
+    id INT PRIMARY KEY,
+    first_name NVARCHAR(MAX) NULL
+);
+
+INSERT INTO Table4 (id, first_name)
+VALUES (1, 'Test1');

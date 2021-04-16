@@ -25,7 +25,7 @@ namespace PlainQueryExtensions
             if (autoIncrementColumn == null)
                 throw new Exception("Auto increment column not found.");
             var outClause = autoIncrementColumn.ColumnName.EscapedName();
-            var valuesClause = string.Join(",", notAutoIncrementColumns.Select(_ => $"@{_.ColumnName}"));
+            var valuesClause = string.Join(",", notAutoIncrementColumns.Select(_ => $"@{_.ColumnName.EntityColumnName(type)}"));
             var query = new Query($@"
 INSERT INTO {table} ({columnsClause}) 
 OUTPUT inserted.{outClause}
@@ -42,7 +42,7 @@ VALUES ({valuesClause})", param);
                 .Where(_ => !_.IsAutoIncrement && !_.IsComputed)
                 .ToList();
             var columnsClause = string.Join(",", columns.Select(_ => _.ColumnName.EscapedName()));
-            var valuesClause = string.Join(",", columns.Select(_ => $"@{_.ColumnName}"));
+            var valuesClause = string.Join(",", columns.Select(_ => $"@{_.ColumnName.EntityColumnName(type)}"));
             var query = new Query($@"
 INSERT INTO {table} ({columnsClause}) 
 VALUES ({valuesClause})", param);
@@ -59,7 +59,7 @@ VALUES ({valuesClause})", param);
                     .Where(_ => !_.IsKey && !_.IsComputed)
                     .Select(_ => $"{_.ColumnName.EscapedName()}=@{_.ColumnName}"));
             var whereClause = string.Join(" AND ", 
-                columnInfos.Where(_ => _.IsKey).Select(_ => $"{_.ColumnName.EscapedName()}=@{_.ColumnName}"));
+                columnInfos.Where(_ => _.IsKey).Select(_ => $"{_.ColumnName.EscapedName()}=@{_.ColumnName.EntityColumnName(type)}"));
             var query = new Query($@"
 UPDATE {table}
 SET {setClause}
@@ -73,7 +73,7 @@ WHERE {whereClause}", param);
             var tableName = GetTableName(type);
             var columnInfos = await GetColumns(tableName, connectionHandler, type);
             var whereClause = string.Join(" AND ", 
-                columnInfos.Where(_ => _.IsKey).Select(_ => $"{_.ColumnName.EscapedName()}=@{_.ColumnName}"));
+                columnInfos.Where(_ => _.IsKey).Select(_ => $"{_.ColumnName.EscapedName()}=@{_.ColumnName.EntityColumnName(type)}"));
             var query = new Query($@"
 DELETE FROM {tableName}
 WHERE {whereClause}", param);
@@ -88,7 +88,7 @@ WHERE {whereClause}", param);
             var selectClause = string.Join(",", 
                 columnInfos.Select(_ => _.ColumnName.EscapedName()));
             var whereClause = string.Join(" AND ", 
-                columnInfos.Where(_ => _.IsKey).Select(_ => $"{_.ColumnName.EscapedName()}=@{_.ColumnName}"));
+                columnInfos.Where(_ => _.IsKey).Select(_ => $"{_.ColumnName.EscapedName()}=@{_.ColumnName.EntityColumnName(type)}"));
             var query = new Query($@"
 SELECT {selectClause}
 FROM {tableName}
@@ -97,7 +97,7 @@ WHERE {whereClause}", param);
         }
 
         private static string EscapedName(this string name) => $"[{name}]";
-
+        
         private static string GetTableName(Type type)
         {
             if (_tableNameDictionary.TryGetValue(type, out var value))
