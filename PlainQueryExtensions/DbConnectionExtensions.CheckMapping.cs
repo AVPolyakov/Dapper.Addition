@@ -118,6 +118,9 @@ namespace PlainQueryExtensions
 
         private static PropertyInfo? FindProperty(PropertyInfo[] properties, string name)
         {
+            if (DefaultTypeMap.MatchNamesWithUnderscores == false)
+                return null;
+            
             return properties.SingleOrDefault(p => string.Equals(p.Name, name.Replace("_", ""), StringComparison.OrdinalIgnoreCase));
         }
 
