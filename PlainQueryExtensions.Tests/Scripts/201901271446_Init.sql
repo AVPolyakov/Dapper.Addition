@@ -32,3 +32,9 @@ CREATE TABLE Table4 (
 
 INSERT INTO Table4 (id, first_name)
 VALUES (1, 'Test1');
+
+CREATE TYPE TVP_Customer AS TABLE
+(
+    [Code] [VARCHAR](20) NULL,
+    [Name] [VARCHAR](20) NULL
+);

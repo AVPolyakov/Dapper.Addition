@@ -8,6 +8,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Threading.Tasks;
+using Dapper;
 using PlainQuery;
 
 namespace PlainQueryExtensions
@@ -192,7 +193,7 @@ namespace PlainQueryExtensions
 
         private static string EntityColumnName(this string name)
         {
-            return Dapper.DefaultTypeMap.MatchNamesWithUnderscores ? name.ToCamelCase() : name;
+            return DefaultTypeMap.MatchNamesWithUnderscores ? name.ToCamelCase() : name;
         }
 
         private static string ToCamelCase(this string name)
@@ -335,7 +336,6 @@ namespace PlainQueryExtensions
                     ilGenerator.Emit(OpCodes.Ldarg_1);
                     ilGenerator.EmitCall(OpCodes.Callvirt, info.GetGetMethod()!, null);
                     ilGenerator.EmitCall(OpCodes.Call, GetAddParamMethod(info.PropertyType), null);
-                    ilGenerator.Emit(OpCodes.Pop);
                 }
                 ilGenerator.Emit(OpCodes.Ret);
 
@@ -369,34 +369,36 @@ namespace PlainQueryExtensions
                         return _nullableLongEnumParam.MakeGenericMethod(argType);
                 }
             }
+            if (typeof(SqlMapper.ICustomQueryParameter) == type)
+                return GetMethodInfo<Action<DbCommand, string, SqlMapper.ICustomQueryParameter>>((command, name, value) => command.AddParam(name, value));
             throw new Exception($"Method of parameter adding not found for type '{type.FullName}'");
         }
-
-        public static readonly Dictionary<Type, MethodInfo> AddParamsMethods = new[]
+        
+        private static readonly Dictionary<Type, MethodInfo> AddParamsMethods = new[]
             {
-                GetMethodInfo<Func<DbCommand, string, byte, DbParameter>>((command, name, value) => command.AddParam(name, value)),
-                GetMethodInfo<Func<DbCommand, string, byte?, DbParameter>>((command, name, value) => command.AddParam(name, value)),
-                GetMethodInfo<Func<DbCommand, string, int, DbParameter>>((command, name, value) => command.AddParam(name, value)),
-                GetMethodInfo<Func<DbCommand, string, int?, DbParameter>>((command, name, value) => command.AddParam(name, value)),
-                GetMethodInfo<Func<DbCommand, string, long, DbParameter>>((command, name, value) => command.AddParam(name, value)),
-                GetMethodInfo<Func<DbCommand, string, long?, DbParameter>>((command, name, value) => command.AddParam(name, value)),
-                GetMethodInfo<Func<DbCommand, string, decimal, DbParameter>>((command, name, value) => command.AddParam(name, value)),
-                GetMethodInfo<Func<DbCommand, string, decimal?, DbParameter>>((command, name, value) => command.AddParam(name, value)),
-                GetMethodInfo<Func<DbCommand, string, bool, DbParameter>>((command, name, value) => command.AddParam(name, value)),
-                GetMethodInfo<Func<DbCommand, string, bool?, DbParameter>>((command, name, value) => command.AddParam(name, value)),
-                GetMethodInfo<Func<DbCommand, string, Guid, DbParameter>>((command, name, value) => command.AddParam(name, value)),
-                GetMethodInfo<Func<DbCommand, string, Guid?, DbParameter>>((command, name, value) => command.AddParam(name, value)),
-                GetMethodInfo<Func<DbCommand, string, DateTime, DbParameter>>((command, name, value) => command.AddParam(name, value)),
-                GetMethodInfo<Func<DbCommand, string, DateTime?, DbParameter>>((command, name, value) => command.AddParam(name, value)),
-                GetMethodInfo<Func<DbCommand, string, string?, DbParameter>>((command, name, value) => command.AddParam(name, value)),
-                GetMethodInfo<Func<DbCommand, string, byte[]?, DbParameter>>((command, name, value) => command.AddParam(name, value)),
+                GetMethodInfo<Action<DbCommand, string, byte>>((command, name, value) => command.AddParam(name, value)),
+                GetMethodInfo<Action<DbCommand, string, byte?>>((command, name, value) => command.AddParam(name, value)),
+                GetMethodInfo<Action<DbCommand, string, int>>((command, name, value) => command.AddParam(name, value)),
+                GetMethodInfo<Action<DbCommand, string, int?>>((command, name, value) => command.AddParam(name, value)),
+                GetMethodInfo<Action<DbCommand, string, long>>((command, name, value) => command.AddParam(name, value)),
+                GetMethodInfo<Action<DbCommand, string, long?>>((command, name, value) => command.AddParam(name, value)),
+                GetMethodInfo<Action<DbCommand, string, decimal>>((command, name, value) => command.AddParam(name, value)),
+                GetMethodInfo<Action<DbCommand, string, decimal?>>((command, name, value) => command.AddParam(name, value)),
+                GetMethodInfo<Action<DbCommand, string, bool>>((command, name, value) => command.AddParam(name, value)),
+                GetMethodInfo<Action<DbCommand, string, bool?>>((command, name, value) => command.AddParam(name, value)),
+                GetMethodInfo<Action<DbCommand, string, Guid>>((command, name, value) => command.AddParam(name, value)),
+                GetMethodInfo<Action<DbCommand, string, Guid?>>((command, name, value) => command.AddParam(name, value)),
+                GetMethodInfo<Action<DbCommand, string, DateTime>>((command, name, value) => command.AddParam(name, value)),
+                GetMethodInfo<Action<DbCommand, string, DateTime?>>((command, name, value) => command.AddParam(name, value)),
+                GetMethodInfo<Action<DbCommand, string, string?>>((command, name, value) => command.AddParam(name, value)),
+                GetMethodInfo<Action<DbCommand, string, byte[]?>>((command, name, value) => command.AddParam(name, value)),
             }
             .ToDictionary(methodInfo => methodInfo.GetParameters()[2].ParameterType);
 
-        public static MethodInfo GetMethodInfo<T>(Expression<T> expression)
+        private static MethodInfo GetMethodInfo<T>(Expression<T> expression)
             => ((MethodCallExpression) expression.Body).Method;
 
-        public static DbParameter AddParameterWithValue(this DbCommand command, string parameterName, object parameterValue)
+        private static DbParameter AddParameterWithValue(this DbCommand command, string parameterName, object parameterValue)
         {
             var parameter = command.CreateParameter();
             parameter.ParameterName = parameterName;
@@ -415,106 +417,133 @@ namespace PlainQueryExtensions
             return parameter;
         }
         
-        public static DbParameter AddParam(this DbCommand command, string parameterName, byte value)
+        private static void AddParam(this DbCommand command, string parameterName, byte value)
             => command.AddParameterWithValue(parameterName, value);
         
-        public static DbParameter AddParam(this DbCommand command, string parameterName, byte? value)
-            => value.HasValue
-                ? command.AddParam(parameterName, value.Value)
-                : command.AddDbNull(parameterName, DbType.Byte);
-        
-        public static DbParameter AddParam(this DbCommand command, string parameterName, int value)
+        private static void AddParam(this DbCommand command, string parameterName, byte? value)
+        {
+            if (value.HasValue)
+                command.AddParam(parameterName, value.Value);
+            else
+                command.AddDbNull(parameterName, DbType.Byte);
+        }
+
+        private static void AddParam(this DbCommand command, string parameterName, int value)
             => command.AddParameterWithValue(parameterName, value);
         
-        public static DbParameter AddParam(this DbCommand command, string parameterName, int? value) 
-            => value.HasValue 
-                ? AddParam(command, parameterName, value.Value) 
-                : command.AddDbNull(parameterName, DbType.Int32);
-        
-        public static DbParameter AddParam(this DbCommand command, string parameterName, long value)
+        private static void AddParam(this DbCommand command, string parameterName, int? value)
+        {
+            if (value.HasValue)
+                AddParam(command, parameterName, value.Value);
+            else
+                command.AddDbNull(parameterName, DbType.Int32);
+        }
+
+        private static void AddParam(this DbCommand command, string parameterName, long value)
             => command.AddParameterWithValue(parameterName, value);
         
-        public static DbParameter AddParam(this DbCommand command, string parameterName, long? value)
-            => value.HasValue
-                ? command.AddParam(parameterName, value.Value)
-                : command.AddDbNull(parameterName, DbType.Int64);
-        
-        public static DbParameter AddParam(this DbCommand command, string parameterName, decimal value)
+        private static void AddParam(this DbCommand command, string parameterName, long? value)
+        {
+            if (value.HasValue)
+                command.AddParam(parameterName, value.Value);
+            else
+                command.AddDbNull(parameterName, DbType.Int64);
+        }
+
+        private static void AddParam(this DbCommand command, string parameterName, decimal value)
         {
             var parameter = command.AddParameterWithValue(parameterName, value);
             const byte defaultPrecision = 38;
             if (parameter.Precision < defaultPrecision) parameter.Precision = defaultPrecision;
             const byte defaultScale = 8;
             if (parameter.Scale < defaultScale) parameter.Scale = 8;
-            return parameter;
         }
         
-        public static DbParameter AddParam(this DbCommand command, string parameterName, decimal? value)
-            => value.HasValue
-                ? command.AddParam(parameterName, value.Value)
-                : command.AddDbNull(parameterName, DbType.Decimal);
+        private static void AddParam(this DbCommand command, string parameterName, decimal? value)
+        {
+            if (value.HasValue)
+                command.AddParam(parameterName, value.Value);
+            else
+                command.AddDbNull(parameterName, DbType.Decimal);
+        }
 
-        public static DbParameter AddParam(this DbCommand command, string parameterName, bool value)
+        private static void AddParam(this DbCommand command, string parameterName, bool value)
             => command.AddParameterWithValue(parameterName, value);
         
-        public static DbParameter AddParam(this DbCommand command, string parameterName, bool? value)
-            => value.HasValue
-                ? command.AddParam(parameterName, value.Value)
-                : command.AddDbNull(parameterName, DbType.Boolean);
-        
-        public static DbParameter AddParam(this DbCommand command, string parameterName, Guid value)
+        private static void AddParam(this DbCommand command, string parameterName, bool? value)
+        {
+            if (value.HasValue)
+                command.AddParam(parameterName, value.Value);
+            else
+                command.AddDbNull(parameterName, DbType.Boolean);
+        }
+
+        private static void AddParam(this DbCommand command, string parameterName, Guid value)
             => command.AddParameterWithValue(parameterName, value);
 
-        public static DbParameter AddParam(this DbCommand command, string parameterName, Guid? value)
-            => value.HasValue
-                ? command.AddParam(parameterName, value.Value)
-                : command.AddDbNull(parameterName, DbType.Guid);
+        private static void AddParam(this DbCommand command, string parameterName, Guid? value)
+        {
+            if (value.HasValue)
+                command.AddParam(parameterName, value.Value);
+            else
+                command.AddDbNull(parameterName, DbType.Guid);
+        }
 
-        public static DbParameter AddParam(this DbCommand command, string parameterName, DateTime value)
+        private static void AddParam(this DbCommand command, string parameterName, DateTime value)
             => command.AddParameterWithValue(parameterName, value);
         
-        public static DbParameter AddParam(this DbCommand command, string parameterName, DateTime? value)
-            => value.HasValue
-                ? command.AddParam(parameterName, value.Value)
-                : command.AddDbNull(parameterName, DbType.DateTime);
-        
-        public static DbParameter AddParam(this DbCommand command, string parameterName, string? value)
+        private static void AddParam(this DbCommand command, string parameterName, DateTime? value)
+        {
+            if (value.HasValue)
+                command.AddParam(parameterName, value.Value);
+            else
+                command.AddDbNull(parameterName, DbType.DateTime);
+        }
+
+        private static void AddParam(this DbCommand command, string parameterName, string? value)
         {
             var parameter = value == null
                 ? command.AddDbNull(parameterName, DbType.String)
                 : command.AddParameterWithValue(parameterName, value);
             if (parameter.Size < DefaultLength && parameter.Size >= 0) parameter.Size = DefaultLength;
-            return parameter;
         }
 
-        public static DbParameter AddParam(this DbCommand command, string parameterName, byte[]? value)
-            => value == null
-                ? command.AddDbNull(parameterName, DbType.Binary)
-                : command.AddParameterWithValue(parameterName, value);
-        
-        public const int DefaultLength = 4000;
+        private static void AddParam(this DbCommand command, string parameterName, byte[]? value)
+        {
+            if (value == null)
+                command.AddDbNull(parameterName, DbType.Binary);
+            else
+                command.AddParameterWithValue(parameterName, value);
+        }
 
-        private static readonly MethodInfo _intEnumParam = GetMethodInfo<Func<DbCommand, string, BindingFlags, DbParameter>>(
+        private static void AddParam(this DbCommand command, string parameterName, SqlMapper.ICustomQueryParameter value)
+        {
+            value.AddParameter(command, parameterName);
+        }
+
+        private const int DefaultLength = 4000;
+
+        private static readonly MethodInfo _intEnumParam = GetMethodInfo<Action<DbCommand, string, BindingFlags>>(
             (command, name, value) => command.AddIntEnumParam(name, value)).GetGenericMethodDefinition();
 
-        private static readonly MethodInfo _longEnumParam = GetMethodInfo<Func<DbCommand, string, BindingFlags, DbParameter>>(
+        private static readonly MethodInfo _longEnumParam = GetMethodInfo<Action<DbCommand, string, BindingFlags>>(
             (command, name, value) => command.AddLongEnumParam(name, value)).GetGenericMethodDefinition();
 
-        private static readonly MethodInfo _nullableIntEnumParam = GetMethodInfo<Func<DbCommand, string, BindingFlags?, DbParameter>>(
+        private static readonly MethodInfo _nullableIntEnumParam = GetMethodInfo<Action<DbCommand, string, BindingFlags?>>(
             (command, name, value) => command.AddIntEnumParam(name, value)).GetGenericMethodDefinition();
         
-        private static readonly MethodInfo _nullableLongEnumParam = GetMethodInfo<Func<DbCommand, string, BindingFlags?, DbParameter>>(
+        private static readonly MethodInfo _nullableLongEnumParam = GetMethodInfo<Action<DbCommand, string, BindingFlags?>>(
             (command, name, value) => command.AddLongEnumParam(name, value)).GetGenericMethodDefinition();
         
-        public static DbParameter AddIntEnumParam<T>(this DbCommand command, string parameterName, T value)
+        private static void AddIntEnumParam<T>(this DbCommand command, string parameterName, T value)
             where T : Enum 
             => command.AddParam(parameterName, ToIntCache<T>.Func(value));
 
-        public static DbParameter AddLongEnumParam<T>(this DbCommand command, string parameterName, T value)
+        private static void AddLongEnumParam<T>(this DbCommand command, string parameterName, T value)
             where T : Enum
             => command.AddParam(parameterName, ToLongCache<T>.Func(value));
 
-        public static DbParameter AddIntEnumParam<T>(this DbCommand command, string parameterName, T? value)
+        private static void AddIntEnumParam<T>(this DbCommand command, string parameterName, T? value)
             where T : struct, Enum
         {
             int? intValue;
@@ -522,10 +551,10 @@ namespace PlainQueryExtensions
                 intValue = ToIntCache<T>.Func(value.Value);
             else
                 intValue = null;
-            return command.AddParam(parameterName, intValue);
+            command.AddParam(parameterName, intValue);
         }
         
-        public static DbParameter AddLongEnumParam<T>(this DbCommand command, string parameterName, T? value)
+        private static void AddLongEnumParam<T>(this DbCommand command, string parameterName, T? value)
             where T : struct, Enum
         {
             long? intValue;
@@ -533,7 +562,7 @@ namespace PlainQueryExtensions
                 intValue = ToLongCache<T>.Func(value.Value);
             else
                 intValue = null;
-            return command.AddParam(parameterName, intValue);
+            command.AddParam(parameterName, intValue);
         }
         
         private static class ToIntCache<T>

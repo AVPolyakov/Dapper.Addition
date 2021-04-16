@@ -1,13 +1,15 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Threading.Tasks;
+using Dapper;
 using PlainQuery;
 using Xunit;
 
 namespace PlainQueryExtensions.Tests
 {
     [Collection(nameof(DatabaseCollection))]
-    public class Tests
+    public class Tests: TestBase
     {
         private static ConnectionHandler Db => DatabaseFixture.Db;
 
@@ -121,6 +123,55 @@ WHERE p.CreationDate >= @fromDate
         }
 
         [Fact]
+        public async Task ScalarType_Success()
+        {
+            var single = await new Query("SELECT @A1 AS A1",
+                    new
+                    {
+                        A1 = "Test3"
+                    })
+                .Single<string>(Db);
+            
+            Assert.Equal("Test3", single);
+        }        
+        
+        [Fact]
+        public async Task Enum_Success()
+        {
+            Enum1? a2 = Enum1.Item2;
+            Enum1? a3 = null;
+            Enum2? a5 = Enum2.Item2;
+            Enum2? a6 = null;
+            
+            var record1 = await new Query(@"
+SELECT 
+    @A1 AS A1,
+    @A2 AS A2,
+    @A3 AS A3,
+    @A4 AS A4,
+    @A5 AS A5,
+    @A6 AS A6
+",
+                    new
+                    {
+                        A1 = Enum1.Item2,
+                        A2 = a2,
+                        A3 = a3,
+                        A4 = Enum2.Item2,
+                        A5 = a5,
+                        A6 = a6,
+                    })
+                .Single<Record1>(Db);
+            
+            Assert.Equal(Enum1.Item2, record1.A1);
+            Assert.Equal(a2, record1.A2);
+            Assert.Equal(a3, record1.A3);
+            Assert.Equal(Enum2.Item2, record1.A4);
+            Assert.Equal(a5, record1.A5);
+            Assert.Equal(a6, record1.A6);
+        }
+        
+        [Fact]
         public async Task InsertUpdate_ComputedColumn1_Success()
         {
             int id;
@@ -170,7 +221,7 @@ WHERE p.CreationDate >= @fromDate
         [Fact]
         public async Task MatchNamesWithUnderscores_Success()
         {
-            Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
+            DefaultTypeMap.MatchNamesWithUnderscores = true;
 
             Assert.Equal("Test1", (await new Query("SELECT * FROM Table4 WHERE Id = @id", new {id = 1}).Single<Table4>(Db)).FirstName);
             
@@ -180,7 +231,30 @@ WHERE p.CreationDate >= @fromDate
             await Db.Insert(entity);
             Assert.Equal("Test2", (await new Query("SELECT Id, first_name FROM Table4 WHERE Id = @id", new {id = 2}).Single<Table4>(Db)).FirstName);
 
-            Dapper.DefaultTypeMap.MatchNamesWithUnderscores = false;
+            DefaultTypeMap.MatchNamesWithUnderscores = false;
+        }
+
+
+        [Fact]
+        public async Task TVP_Success()
+        {
+            var dataTable = new DataTable();
+            dataTable.Columns.Add("Code");
+            dataTable.Columns.Add("Name");
+
+            for (var i = 0; i < 5; i++) 
+                dataTable.Rows.Add("Code_" + i, "Name_" + i);
+
+            var query = new Query(@"
+SELECT *
+FROM @Customers",
+                new
+                {
+                    Customers = dataTable.AsTableValuedParameter("TVP_Customer")
+                });
+            var customers = await query.ToList<Customer>(Db);
+            Assert.Equal(5, customers.Count);
+            Assert.Equal("Code_4", customers[4].Code);
         }
     }
 }
