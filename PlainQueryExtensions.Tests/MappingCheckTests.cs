@@ -35,10 +35,24 @@ namespace PlainQueryExtensions.Tests
             var exception = await Assert.ThrowsAsync<Exception>(
                 () => query.ToList<PostInfo3>(Db));
 
-            Assert.Equal(@"Type of field 'PostId' does not match. Field type is 'long' in destination and `int` with AllowDbNull='False' in query. You can copy list of properties to destination type PlainQueryExtensions.Tests.PostInfo3:
+            Assert.Equal(@"Type of field 'PostId' does not match. Field type is 'long' in destination and `int` in query. You can copy list of properties to destination type PlainQueryExtensions.Tests.PostInfo3:
         public int PostId { get; set; }
         public string Text { get; set; }
         public DateTime CreationDate { get; set; }",
+                exception.Message);
+        }
+        
+        [Fact]
+        public async Task FieldTypeMismatch_Nullable_ExceptionThrown()
+        {
+            var query = new Query("SELECT * FROM Table5");
+
+            var exception = await Assert.ThrowsAsync<Exception>(
+                () => query.ToList<Table5Info>(Db));
+
+            Assert.Equal(@"Type of field 'CreationDate' does not match. Field type is 'DateTime' in destination and `DateTime?` in query. You can copy list of properties to destination type PlainQueryExtensions.Tests.Table5Info:
+        public int Id { get; set; }
+        public DateTime? CreationDate { get; set; }",
                 exception.Message);
         }
         
@@ -60,7 +74,7 @@ namespace PlainQueryExtensions.Tests
             var exception = await Assert.ThrowsAsync<Exception>(
                 () => Db.Insert<long>(post));
 
-            Assert.Equal(@"Type of field 'PostId' does not match. Field type is 'long' in destination and `int` with AllowDbNull='False' in query. You can copy list of properties to destination type PlainQueryExtensions.Tests.Namaspace2.Post:
+            Assert.Equal(@"Type of field 'PostId' does not match. Field type is 'long' in destination and `int` in query. You can copy list of properties to destination type PlainQueryExtensions.Tests.Namaspace2.Post:
         public int PostId { get; set; }
         public string Text { get; set; }
         public DateTime CreationDate { get; set; }",

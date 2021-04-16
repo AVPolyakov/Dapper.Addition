@@ -38,3 +38,9 @@ CREATE TYPE TVP_Customer AS TABLE
     [Code] [VARCHAR](20) NULL,
     [Name] [VARCHAR](20) NULL
 );
+
+CREATE TABLE Table5 (
+    Id INT IDENTITY PRIMARY KEY,
+    CreationDate DATETIME
+);
+

@@ -188,8 +188,8 @@ namespace PlainQueryExtensions
             {
                 var name = reader.GetName(ordinal);
                 var destinationTypeName = destinationType.GetCSharpName();
-                var fieldTypeName = fieldType.GetCSharpName();
-                return reader.GetException($"Type of field '{name}' does not match. Field type is '{destinationTypeName}' in destination and `{fieldTypeName}` with AllowDbNull='{allowDbNull}' in query.", type);
+                var fieldTypeName = reader.GetFieldTypeWithNullable(ordinal).GetCSharpName();
+                return reader.GetException($"Type of field '{name}' does not match. Field type is '{destinationTypeName}' in destination and `{fieldTypeName}` in query.", type);
             }
         }
 
@@ -205,12 +205,17 @@ namespace PlainQueryExtensions
 ",
                 Enumerable.Range(0, reader.FieldCount).Select(i =>
                 {
-                    var type = AllowDbNull(reader, i) && reader.GetFieldType(i).IsValueType
-                        ? typeof(Nullable<>).MakeGenericType(reader.GetFieldType(i))
-                        : reader.GetFieldType(i);
+                    var type = reader.GetFieldTypeWithNullable(i);
                     var typeName = type.GetCSharpName();
                     return $"        public {typeName} {reader.GetName(i).EntityColumnName()} {{ get; set; }}";
                 }));
+        }
+
+        private static Type GetFieldTypeWithNullable(this DbDataReader reader, int i)
+        {
+            return AllowDbNull(reader, i) && reader.GetFieldType(i).IsValueType
+                ? typeof(Nullable<>).MakeGenericType(reader.GetFieldType(i))
+                : reader.GetFieldType(i);
         }
 
         private static string EntityColumnName(this string name)
