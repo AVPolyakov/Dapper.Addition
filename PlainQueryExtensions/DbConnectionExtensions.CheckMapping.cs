@@ -10,6 +10,8 @@ using System.Reflection.Emit;
 using System.Threading.Tasks;
 using Dapper;
 using PlainQuery;
+using PlainQueryExtensions.PostgreSql;
+using PlainQueryExtensions.SqlServer;
 
 namespace PlainQueryExtensions
 {
@@ -29,7 +31,7 @@ namespace PlainQueryExtensions
                 command.AddParams(query);
 
                 await using (var reader = await command.ExecuteReaderAsync(CommandBehavior.SchemaOnly)) 
-                    reader.CheckMapping<T>();
+                    reader.CheckMapping<T>(connection);
             }
         }
         
@@ -39,15 +41,15 @@ namespace PlainQueryExtensions
                 await connection.OpenAsync();
         }
         
-        internal static void CheckMapping<T>(this DbDataReader reader)
+        internal static void CheckMapping<T>(this DbDataReader reader, DbConnection connection)
         {
             if (!MappingCheckSettings.MappingCheckEnabled)
                 return;
             
-            reader.CheckMapping(typeof(T));
+            reader.CheckMapping(typeof(T), connection);
         }
 
-        internal static void CheckMapping(this DbDataReader reader, Type type)
+        internal static void CheckMapping(this DbDataReader reader, Type type, DbConnection connection)
         {
             if (!MappingCheckSettings.MappingCheckEnabled)
                 return;
@@ -57,7 +59,7 @@ namespace PlainQueryExtensions
                 if (reader.FieldCount > 1)
                     throw reader.GetException($"Count of fields is greater than one. Query has {reader.FieldCount} fields.", type);
                 
-                CheckFieldType(reader, 0, type, type);
+                CheckFieldType(reader, 0, type, type, connection);
             }
             else
             {
@@ -70,7 +72,7 @@ namespace PlainQueryExtensions
                     if (propertyInfo == null)
                         throw reader.GetException($"Property '{name}' not found in destination type.", type);
                     
-                    CheckFieldType(reader, ordinal, propertyInfo.PropertyType, type);
+                    CheckFieldType(reader, ordinal, propertyInfo.PropertyType, type, connection);
                 }
             }
         }
@@ -164,7 +166,7 @@ namespace PlainQueryExtensions
             }
             .ToHashSet();
         
-        private static void CheckFieldType(DbDataReader reader, int ordinal, Type destinationType, Type type)
+        private static void CheckFieldType(DbDataReader reader, int ordinal, Type destinationType, Type type, DbConnection connection)
         {
             var fieldType = reader.GetFieldType(ordinal);
             var allowDbNull = AllowDbNull(reader, ordinal);
@@ -175,7 +177,8 @@ namespace PlainQueryExtensions
                 {
                     //no-op
                 }
-                else if (!destinationType.IsValueType && TypesAreCompatible(fieldType, destinationType))
+                else if ((!destinationType.IsValueType || !connection.Adapter().CheckNullabilityEnabled) && 
+                    TypesAreCompatible(fieldType, destinationType))
                 {
                     //no-op
                 }
@@ -196,6 +199,23 @@ namespace PlainQueryExtensions
                 return reader.GetException($"Type of field '{name}' does not match. Field type is '{destinationTypeName}' in destination and `{fieldTypeName}` in query.", type);
             }
         }
+
+        private static ISqlAdapter Adapter(this DbConnection connection)
+        {
+            var connectionType = connection.GetType();
+            var connectionTypeName = connectionType.Name.ToLower();
+
+            if (_adapterDictionary.TryGetValue(connectionTypeName, out var value))
+                return value;
+
+            throw new Exception($"Unknown connection type '{connectionType}'");
+        }
+
+        private static readonly Dictionary<string, ISqlAdapter> _adapterDictionary = new()
+        {
+            ["sqlconnection"] = new SqlServerAdapter(),
+            ["npgsqlconnection"] = new PostgreSqlAdapter(),
+        };
 
         private static Exception GetException(this DbDataReader reader, string message, Type type)
         {
@@ -261,7 +281,7 @@ namespace PlainQueryExtensions
         
         private static bool AllowDbNull(DbDataReader reader, int ordinal)
         {
-            return (bool) reader.GetSchemaTable()!.Rows[ordinal]["AllowDBNull"];
+            return true.Equals(reader.GetSchemaTable()!.Rows[ordinal]["AllowDBNull"]);
         }
         
         /// <summary>

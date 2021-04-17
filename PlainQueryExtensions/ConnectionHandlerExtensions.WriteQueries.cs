@@ -174,7 +174,7 @@ WHERE {whereClause}", param);
                     
                     await using (var reader = await command.ExecuteReaderAsync(CommandBehavior.SchemaOnly | CommandBehavior.KeyInfo))
                     {
-                        reader.CheckMapping(type);
+                        reader.CheckMapping(type, connection);
 
                         var schemaTable = await reader.GetSchemaTableAsync();
 
