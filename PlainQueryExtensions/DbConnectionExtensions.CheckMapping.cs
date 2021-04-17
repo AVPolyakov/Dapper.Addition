@@ -70,7 +70,7 @@ namespace PlainQueryExtensions
 
                     var propertyInfo = type.FindProperty(name);
                     if (propertyInfo == null)
-                        throw reader.GetException($"Property '{name}' not found in destination type.", type);
+                        throw reader.GetException($"Property '{name.ToCamelCase()}' not found in destination type.", type);
                     
                     CheckFieldType(reader, ordinal, propertyInfo.PropertyType, type, connection);
                 }
@@ -196,11 +196,11 @@ namespace PlainQueryExtensions
                 var name = reader.GetName(ordinal);
                 var destinationTypeName = destinationType.GetCSharpName();
                 var fieldTypeName = reader.GetFieldTypeWithNullable(ordinal).GetCSharpName();
-                return reader.GetException($"Type of field '{name}' does not match. Field type is '{destinationTypeName}' in destination and `{fieldTypeName}` in query.", type);
+                return reader.GetException($"Type of field '{name.ToCamelCase()}' does not match. Field type is '{destinationTypeName}' in destination and `{fieldTypeName}` in query.", type);
             }
         }
 
-        private static ISqlAdapter Adapter(this DbConnection connection)
+        internal static ISqlAdapter Adapter(this DbConnection connection)
         {
             var connectionType = connection.GetType();
             var connectionTypeName = connectionType.Name.ToLower();
@@ -252,7 +252,7 @@ namespace PlainQueryExtensions
             IEnumerable<char> Enumerate()
             {
                 var toUpper = true;
-                foreach (var c in name.ToLower())
+                foreach (var c in name)
                 {
                     if (toUpper)
                     {
