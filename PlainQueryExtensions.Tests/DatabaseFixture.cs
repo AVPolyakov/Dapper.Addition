@@ -1,37 +1,27 @@
 using System;
 using System.Data.SqlClient;
 using System.Reflection;
+using System.Threading.Tasks;
 using DbUp;
+using PlainQuery;
+using Xunit;
 
 namespace PlainQueryExtensions.Tests
 {
-    public class DatabaseFixture
+    public class DatabaseFixture: IAsyncLifetime
     {
         private const string DatabaseName = "PlainQueryExtensions";
         public static readonly ConnectionHandler Db = new(@$"Data Source=(local)\SQL2014;Initial Catalog={DatabaseName};Integrated Security=True");
         
-        public DatabaseFixture()
+        public async Task InitializeAsync()
         {
-            DbUp();
-        }
-        
-        private void DbUp()
-        {
-            using (var connection = new SqlConnection(new SqlConnectionStringBuilder(Db.ConnectionString) {InitialCatalog = "master"}.ConnectionString))
-            {
-                connection.Open();
-
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = @$"
+            var db = new ConnectionHandler(new SqlConnectionStringBuilder(Db.ConnectionString) {InitialCatalog = "master"}.ConnectionString);
+            await new Query(@$"
 IF EXISTS ( SELECT * FROM sys.databases WHERE name = '{DatabaseName}' )
     DROP DATABASE [{DatabaseName}]
 
 CREATE DATABASE [{DatabaseName}]
-";
-                    command.ExecuteNonQuery();
-                }
-            }
+").Execute(db);
             
             var upgrader = DeployChanges.To
                 .SqlDatabase(Db.ConnectionString)
@@ -45,5 +35,7 @@ CREATE DATABASE [{DatabaseName}]
             if (!result.Successful)
                 throw new Exception("Database upgrade failed", result.Error);
         }
+
+        public Task DisposeAsync() => Task.CompletedTask;
     }
 }
