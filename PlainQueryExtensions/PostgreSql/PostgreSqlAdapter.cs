@@ -7,5 +7,10 @@ namespace PlainQueryExtensions.PostgreSql
         //of columns from the view definition. 
         //https://www.postgresql-archive.org/is-nullable-column-of-information-schema-columns-table-td6117273.html
         public bool CheckNullabilityEnabled => false;
+        
+        public string InsertQueryText(string table, string columnsClause, string valuesClause, string outClause) => $@"
+INSERT INTO {table} ({columnsClause}) 
+VALUES ({valuesClause})
+RETURNING {outClause}";
     }
 }
