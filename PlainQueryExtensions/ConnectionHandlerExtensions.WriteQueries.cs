@@ -57,7 +57,7 @@ VALUES ({valuesClause})", param);
             var setClause = string.Join(",",
                 columnInfos
                     .Where(_ => !_.IsKey && !_.IsReadOnly(type))
-                    .Select(_ => $"{_.ColumnName.EscapedName()}=@{_.ColumnName}"));
+                    .Select(_ => $"{_.ColumnName.EscapedName()}=@{type.EntityColumnName(_.ColumnName)}"));
             var whereClause = string.Join(" AND ", 
                 columnInfos.Where(_ => _.IsKey).Select(_ => $"{_.ColumnName.EscapedName()}=@{type.EntityColumnName(_.ColumnName)}"));
             var query = new Query($@"
