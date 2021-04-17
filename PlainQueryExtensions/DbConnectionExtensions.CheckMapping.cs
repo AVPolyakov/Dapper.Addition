@@ -281,7 +281,11 @@ namespace PlainQueryExtensions
         
         private static bool AllowDbNull(DbDataReader reader, int ordinal)
         {
-            return true.Equals(reader.GetSchemaTable()!.Rows[ordinal]["AllowDBNull"]);
+            var row = reader.GetSchemaTable()!.Rows[ordinal];
+            if (false.Equals(row["AllowDBNull"]))
+                return false;
+            else
+                return true;
         }
         
         /// <summary>
