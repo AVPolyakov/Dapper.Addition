@@ -1,6 +1,6 @@
 namespace PlainQueryExtensions
 {
-    public interface ISqlAdapter
+    internal interface ISqlAdapter
     {
         bool NullabilityCheckEnabled { get; }
         

@@ -4,7 +4,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlainQuery", "PlainQuery\Pl
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlainQueryExtensions", "PlainQueryExtensions\PlainQueryExtensions.csproj", "{3C5A6279-62A9-4C7E-9019-680A271A9623}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlainQueryExtensions.Tests", "PlainQueryExtensions.Tests\PlainQueryExtensions.Tests.csproj", "{4480D4FA-4B9A-49C7-B6D5-FD20E5CB3864}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlainQueryExtensions.SharedTests", "PlainQueryExtensions.SharedTests\PlainQueryExtensions.SharedTests.csproj", "{10F223AF-4314-4065-8337-810574FC2C38}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlainQueryExtensions.SqlServerTests", "PlainQueryExtensions.SqlServerTests\PlainQueryExtensions.SqlServerTests.csproj", "{6D9E79AC-9191-4B63-AB6F-D694A3FC715D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlainQueryExtensions.PostgreSqlTests", "PlainQueryExtensions.PostgreSqlTests\PlainQueryExtensions.PostgreSqlTests.csproj", "{47AE81CC-B57A-46C1-98D1-D99395655929}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -20,9 +24,17 @@ Global
 		{3C5A6279-62A9-4C7E-9019-680A271A9623}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3C5A6279-62A9-4C7E-9019-680A271A9623}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3C5A6279-62A9-4C7E-9019-680A271A9623}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4480D4FA-4B9A-49C7-B6D5-FD20E5CB3864}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4480D4FA-4B9A-49C7-B6D5-FD20E5CB3864}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4480D4FA-4B9A-49C7-B6D5-FD20E5CB3864}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4480D4FA-4B9A-49C7-B6D5-FD20E5CB3864}.Release|Any CPU.Build.0 = Release|Any CPU
+		{10F223AF-4314-4065-8337-810574FC2C38}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{10F223AF-4314-4065-8337-810574FC2C38}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{10F223AF-4314-4065-8337-810574FC2C38}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{10F223AF-4314-4065-8337-810574FC2C38}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6D9E79AC-9191-4B63-AB6F-D694A3FC715D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6D9E79AC-9191-4B63-AB6F-D694A3FC715D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6D9E79AC-9191-4B63-AB6F-D694A3FC715D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6D9E79AC-9191-4B63-AB6F-D694A3FC715D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{47AE81CC-B57A-46C1-98D1-D99395655929}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{47AE81CC-B57A-46C1-98D1-D99395655929}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{47AE81CC-B57A-46C1-98D1-D99395655929}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{47AE81CC-B57A-46C1-98D1-D99395655929}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

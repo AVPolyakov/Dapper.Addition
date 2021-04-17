@@ -1,0 +1,8 @@
+namespace PlainQueryExtensions.SqlServerTests
+{
+    public class Customer
+    {
+        public string? Code { get; set; }
+        public string? Name { get; set; }        
+    }
+}
