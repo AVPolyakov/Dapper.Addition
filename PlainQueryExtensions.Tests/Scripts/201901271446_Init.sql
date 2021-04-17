@@ -1,36 +1,36 @@
-﻿CREATE TABLE Post (
+﻿CREATE TABLE Posts (
   PostId INT IDENTITY PRIMARY KEY,
   Text NVARCHAR(MAX) NULL,
   CreationDate DATETIME NOT NULL,
 );
 
-INSERT INTO Post (Text, CreationDate)
+INSERT INTO Posts (Text, CreationDate)
   VALUES ('Test1', '2021-01-14');
-INSERT INTO Post (Text, CreationDate)
+INSERT INTO Posts (Text, CreationDate)
   VALUES (NULL, '2021-02-15');
 
-CREATE TABLE Table2 (
+CREATE TABLE Table2s (
     Id INT IDENTITY PRIMARY KEY,
     Text NVARCHAR(MAX) NULL,
     ComputedColumn1 AS 1
 );
 
-CREATE TABLE Comments (
+CREATE TABLE Comment2s (
     Id INT IDENTITY PRIMARY KEY,
     Text NVARCHAR(MAX) NULL
 );
 
-CREATE TABLE Table3 (
+CREATE TABLE Table3s (
     Id INT PRIMARY KEY,
     Text NVARCHAR(MAX) NULL
 );
 
-CREATE TABLE Table4 (
+CREATE TABLE Table4s (
     id INT PRIMARY KEY,
     first_name NVARCHAR(MAX) NULL
 );
 
-INSERT INTO Table4 (id, first_name)
+INSERT INTO Table4s (id, first_name)
 VALUES (1, 'Test1');
 
 CREATE TYPE TVP_Customer AS TABLE
@@ -39,7 +39,7 @@ CREATE TYPE TVP_Customer AS TABLE
     [Name] [VARCHAR](20) NULL
 );
 
-CREATE TABLE Table5 (
+CREATE TABLE Table5s (
     Id INT IDENTITY PRIMARY KEY,
     CreationDate DATETIME
 );

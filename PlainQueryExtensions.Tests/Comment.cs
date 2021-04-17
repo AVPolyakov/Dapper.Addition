@@ -1,6 +1,6 @@
 namespace PlainQueryExtensions.Tests
 {
-    [Table("Comments")]
+    [Table("Comment2s")]
     public class Comment
     {
         public int Id { get; set; }

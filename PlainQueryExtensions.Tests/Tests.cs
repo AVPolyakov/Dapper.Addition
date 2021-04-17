@@ -22,7 +22,7 @@ namespace PlainQueryExtensions.Tests
             
             var query = new Query(@"
 SELECT p.PostId, p.Text, p.CreationDate
-FROM Post p
+FROM Posts p
 WHERE p.CreationDate >= @date
 ORDER BY p.PostId", new {date});
 
@@ -57,7 +57,7 @@ ORDER BY p.PostId", new {date});
         {
             var query = new Query(@"
 SELECT p.PostId, p.Text, p.CreationDate
-FROM Post p
+FROM Posts p
 WHERE 1 = 1");
             if (date.HasValue)
                 query.Append(@"
@@ -74,18 +74,18 @@ WHERE 1 = 1");
                 var post = new Post {CreationDate = new DateTime(2014, 1, 1)};
                 FillPost(post, new PostData {Text = "Test"});
                 id = await Db.Insert<int>(post);
-                Assert.Equal("Test", await new Query("SELECT Text FROM Post WHERE PostId = @id", new {id}).Single<string>(Db));
+                Assert.Equal("Test", await new Query("SELECT Text FROM Posts WHERE PostId = @id", new {id}).Single<string>(Db));
             }
             {
                 var post = await Db.GetByKey<Post>(new {PostId = id});
                 FillPost(post, new PostData {Text = "Test2"});
                 await Db.Update(post);
-                Assert.Equal("Test2", await new Query("SELECT Text FROM Post WHERE PostId = @id", new {id}).Single<string>(Db));
+                Assert.Equal("Test2", await new Query("SELECT Text FROM Posts WHERE PostId = @id", new {id}).Single<string>(Db));
             }
             {
                 var rowCount = await Db.Delete<Post>(new {PostId = id});
                 Assert.Equal(1, rowCount);
-                Assert.Empty(await new Query("SELECT Text FROM Post WHERE PostId = @id", new {id}).ToList<string>(Db));
+                Assert.Empty(await new Query("SELECT Text FROM Posts WHERE PostId = @id", new {id}).ToList<string>(Db));
             }
         }
         
@@ -117,7 +117,7 @@ ORDER BY p.PostId", new {toDate});
             
             return query.Query(@"
 SELECT * 
-FROM Post p
+FROM Posts p
 WHERE p.CreationDate >= @fromDate
 ", new {fromDate});
         }
@@ -178,14 +178,14 @@ SELECT
             {
                 var entity = new Table2{Text = "Test"};
                 id = await Db.Insert<int>(entity);
-                Assert.Equal("Test", await new Query("SELECT Text FROM Table2 WHERE Id = @id", new {id}).Single<string>(Db));
+                Assert.Equal("Test", await new Query("SELECT Text FROM Table2s WHERE Id = @id", new {id}).Single<string>(Db));
             }
             {
                 var entity = await Db.GetByKey<Table2>(new {Id = id});  
                 Assert.Equal(1, entity.ComputedColumn1);
                 entity.Text = "Test2";
                 await Db.Update(entity);
-                Assert.Equal("Test2", await new Query("SELECT Text FROM Table2 WHERE Id = @id", new {id}).Single<string>(Db));
+                Assert.Equal("Test2", await new Query("SELECT Text FROM Table2s WHERE Id = @id", new {id}).Single<string>(Db));
             }
         }
         
@@ -196,13 +196,13 @@ SELECT
             {
                 var entity = new Comment{Text = "Test"};
                 id = await Db.Insert<int>(entity);
-                Assert.Equal("Test", await new Query("SELECT Text FROM Comments WHERE Id = @id", new {id}).Single<string>(Db));
+                Assert.Equal("Test", await new Query("SELECT Text FROM Comment2s WHERE Id = @id", new {id}).Single<string>(Db));
             }
             {
                 var entity = await Db.GetByKey<Comment>(new {Id = id});
                 entity.Text = "Test2";
                 await Db.Update(entity);
-                Assert.Equal("Test2", await new Query("SELECT Text FROM Comments WHERE Id = @id", new {id}).Single<string>(Db));
+                Assert.Equal("Test2", await new Query("SELECT Text FROM Comment2s WHERE Id = @id", new {id}).Single<string>(Db));
             }
         }
         
@@ -212,7 +212,7 @@ SELECT
             var id = 5;
             var entity = new Table3 {Id = id, Text = "Test"};
             await Db.Insert(entity);
-            Assert.Equal("Test", await new Query("SELECT Text FROM Table3 WHERE Id = @id", new {id}).Single<string>(Db));
+            Assert.Equal("Test", await new Query("SELECT Text FROM Table3s WHERE Id = @id", new {id}).Single<string>(Db));
 
             var rowCount = await Db.Delete<Table3>(new {Id = id});
             Assert.Equal(1, rowCount);
@@ -223,13 +223,13 @@ SELECT
         {
             DefaultTypeMap.MatchNamesWithUnderscores = true;
 
-            Assert.Equal("Test1", (await new Query("SELECT * FROM Table4 WHERE Id = @id", new {id = 1}).Single<Table4>(Db)).FirstName);
+            Assert.Equal("Test1", (await new Query("SELECT * FROM Table4s WHERE Id = @id", new {id = 1}).Single<Table4>(Db)).FirstName);
             
             await Db.Delete<Table4>(new {Id = 2});
             
             var entity = new Table4 {Id = 2, FirstName = "Test2"};
             await Db.Insert(entity);
-            Assert.Equal("Test2", (await new Query("SELECT Id, first_name FROM Table4 WHERE Id = @id", new {id = 2}).Single<Table4>(Db)).FirstName);
+            Assert.Equal("Test2", (await new Query("SELECT Id, first_name FROM Table4s WHERE Id = @id", new {id = 2}).Single<Table4>(Db)).FirstName);
 
             DefaultTypeMap.MatchNamesWithUnderscores = false;
         }

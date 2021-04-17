@@ -104,7 +104,7 @@ WHERE {whereClause}", param);
                 return value;
             
             var tableAttributeName = type.GetCustomAttribute<TableAttribute>()?.Name;
-            var tableName = tableAttributeName ?? type.Name;
+            var tableName = tableAttributeName ?? type.Name + "s";
 
             _tableNameDictionary.TryAdd(type, tableName);
             

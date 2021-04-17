@@ -24,10 +24,11 @@ namespace PlainQueryExtensions.Tests
                 using (var command = connection.CreateCommand())
                 {
                     command.CommandText = @$"
-IF NOT EXISTS ( SELECT [Name] FROM sys.databases WHERE [name] = '{DatabaseName}' )
-BEGIN
-    CREATE DATABASE [{DatabaseName}]
-END";
+IF EXISTS ( SELECT * FROM sys.databases WHERE name = '{DatabaseName}' )
+    DROP DATABASE [{DatabaseName}]
+
+CREATE DATABASE [{DatabaseName}]
+";
                     command.ExecuteNonQuery();
                 }
             }

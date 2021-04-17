@@ -15,7 +15,7 @@ namespace PlainQueryExtensions.Tests
         [Fact]
         public async Task EmptyDestinationType_ExceptionThrown()
         {
-            var query = new Query("SELECT p.PostId, p.Text, p.CreationDate FROM Post p");
+            var query = new Query("SELECT p.PostId, p.Text, p.CreationDate FROM Posts p");
 
             var exception = await Assert.ThrowsAsync<Exception>(
                 () => query.ToList<PostInfo2>(Db));
@@ -30,7 +30,7 @@ namespace PlainQueryExtensions.Tests
         [Fact]
         public async Task FieldTypeMismatch_ExceptionThrown()
         {
-            var query = new Query("SELECT p.PostId, p.Text, p.CreationDate FROM Post p");
+            var query = new Query("SELECT p.PostId, p.Text, p.CreationDate FROM Posts p");
 
             var exception = await Assert.ThrowsAsync<Exception>(
                 () => query.ToList<PostInfo3>(Db));
@@ -45,7 +45,7 @@ namespace PlainQueryExtensions.Tests
         [Fact]
         public async Task FieldTypeMismatch_Nullable_ExceptionThrown()
         {
-            var query = new Query("SELECT * FROM Table5");
+            var query = new Query("SELECT * FROM Table5s");
 
             var exception = await Assert.ThrowsAsync<Exception>(
                 () => query.ToList<Table5Info>(Db));
@@ -59,7 +59,7 @@ namespace PlainQueryExtensions.Tests
         [Fact]
         public async Task IgnoredProperty_Success()
         {
-            var query = new Query("SELECT p.PostId, p.Text, p.CreationDate FROM Post p");
+            var query = new Query("SELECT p.PostId, p.Text, p.CreationDate FROM Posts p");
 
             var list = await query.ToList<PostInfo4>(Db);
             
