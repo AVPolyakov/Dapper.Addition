@@ -105,8 +105,9 @@ namespace PlainQueryExtensions
                         return property;
                 }
 
+                if (DefaultTypeMap.MatchNamesWithUnderscores)
                 {
-                    var property = FindProperty(properties, name);
+                    var property = properties.SingleOrDefault(p => string.Equals(p.Name, name.Replace("_", ""), StringComparison.OrdinalIgnoreCase));
                     if (property != null)
                         return property;
                 }
@@ -121,15 +122,6 @@ namespace PlainQueryExtensions
             return propertyInfo;
         }
         
-        
-        private static PropertyInfo? FindProperty(PropertyInfo[] properties, string name)
-        {
-            if (DefaultTypeMap.MatchNamesWithUnderscores == false)
-                return null;
-            
-            return properties.SingleOrDefault(p => string.Equals(p.Name, name.Replace("_", ""), StringComparison.OrdinalIgnoreCase));
-        }
-
         private static bool ReadTypeIsScalar(this Type type)
         {
             if (_scalarReadType.Contains(type))
