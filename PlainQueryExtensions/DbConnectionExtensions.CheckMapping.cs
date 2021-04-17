@@ -177,7 +177,7 @@ namespace PlainQueryExtensions
                 {
                     //no-op
                 }
-                else if ((!destinationType.IsValueType || !connection.Adapter().CheckNullabilityEnabled) && 
+                else if ((!destinationType.IsValueType || !connection.Adapter().NullabilityCheckEnabled) && 
                     TypesAreCompatible(fieldType, destinationType))
                 {
                     //no-op

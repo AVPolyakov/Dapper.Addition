@@ -2,7 +2,7 @@ namespace PlainQueryExtensions
 {
     public interface ISqlAdapter
     {
-        bool CheckNullabilityEnabled { get; }
+        bool NullabilityCheckEnabled { get; }
         string InsertQueryText(string table, string columnsClause, string valuesClause, string outClause);
     }
 }

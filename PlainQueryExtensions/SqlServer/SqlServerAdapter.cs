@@ -2,7 +2,7 @@ namespace PlainQueryExtensions.SqlServer
 {
     internal class SqlServerAdapter : ISqlAdapter
     {
-        public bool CheckNullabilityEnabled => true;
+        public bool NullabilityCheckEnabled => true;
         
         public string InsertQueryText(string table, string columnsClause, string valuesClause, string outClause) => $@"
 INSERT INTO {table} ({columnsClause}) 

@@ -6,7 +6,7 @@ namespace PlainQueryExtensions.PostgreSql
         //that value or not.  PostgreSQL does not attempt to deduce the nullability
         //of columns from the view definition. 
         //https://www.postgresql-archive.org/is-nullable-column-of-information-schema-columns-table-td6117273.html
-        public bool CheckNullabilityEnabled => false;
+        public bool NullabilityCheckEnabled => false;
         
         public string InsertQueryText(string table, string columnsClause, string valuesClause, string outClause) => $@"
 INSERT INTO {table} ({columnsClause}) 
