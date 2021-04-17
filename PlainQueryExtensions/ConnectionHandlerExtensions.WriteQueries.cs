@@ -20,18 +20,18 @@ namespace PlainQueryExtensions
             
             var columnInfos = await GetColumns(table, connectionHandler, type);
             
+            var adapter = await connectionHandler.Handle(connection => Task.FromResult(connection.Adapter()));
+            
             var notAutoIncrementColumns = columnInfos
                 .Where(_ => !_.IsAutoIncrement && !_.IsReadOnly(type))
                 .ToList();
-            var columnsClause = string.Join(",", notAutoIncrementColumns.Select(_ => _.ColumnName.EscapedName()));
+            var columnsClause = string.Join(",", notAutoIncrementColumns.Select(_ => _.ColumnName.EscapedName(adapter)));
             var autoIncrementColumn = columnInfos.SingleOrDefault(_ => _.IsAutoIncrement);
             if (autoIncrementColumn == null)
                 throw new Exception("Auto increment column not found.");
-            var outClause = autoIncrementColumn.ColumnName.EscapedName();
+            var outClause = autoIncrementColumn.ColumnName.EscapedName(adapter);
             var valuesClause = string.Join(",", notAutoIncrementColumns.Select(_ => $"@{type.EntityColumnName(_.ColumnName)}"));
-
-            var adapter = await connectionHandler.Handle(connection => Task.FromResult(connection.Adapter()));
-
+            
             var queryText = adapter.InsertQueryText(table, columnsClause, valuesClause, outClause);
             
             var query = new Query(queryText, param);
@@ -47,10 +47,12 @@ namespace PlainQueryExtensions
             
             var columnInfos = await GetColumns(table, connectionHandler, type);
             
+            var adapter = await connectionHandler.Handle(connection => Task.FromResult(connection.Adapter()));
+
             var columns = columnInfos
                 .Where(_ => !_.IsAutoIncrement && !_.IsReadOnly(type))
                 .ToList();
-            var columnsClause = string.Join(",", columns.Select(_ => _.ColumnName.EscapedName()));
+            var columnsClause = string.Join(",", columns.Select(_ => _.ColumnName.EscapedName(adapter)));
             var valuesClause = string.Join(",", columns.Select(_ => $"@{type.EntityColumnName(_.ColumnName)}"));
             
             var query = new Query($@"
@@ -68,12 +70,14 @@ VALUES ({valuesClause})", param);
             
             var columnInfos = await GetColumns(table, connectionHandler, type);
             
+            var adapter = await connectionHandler.Handle(connection => Task.FromResult(connection.Adapter()));
+            
             var setClause = string.Join(",",
                 columnInfos
                     .Where(_ => !_.IsKey && !_.IsReadOnly(type))
-                    .Select(_ => $"{_.ColumnName.EscapedName()}=@{type.EntityColumnName(_.ColumnName)}"));
+                    .Select(_ => $"{_.ColumnName.EscapedName(adapter)}=@{type.EntityColumnName(_.ColumnName)}"));
             var whereClause = string.Join(" AND ", 
-                columnInfos.Where(_ => _.IsKey).Select(_ => $"{_.ColumnName.EscapedName()}=@{type.EntityColumnName(_.ColumnName)}"));
+                columnInfos.Where(_ => _.IsKey).Select(_ => $"{_.ColumnName.EscapedName(adapter)}=@{type.EntityColumnName(_.ColumnName)}"));
             
             var query = new Query($@"
 UPDATE {table}
@@ -89,9 +93,11 @@ WHERE {whereClause}", param);
             
             var tableName = GetTableName(type);
             
+            var adapter = await connectionHandler.Handle(connection => Task.FromResult(connection.Adapter()));
+
             var columnInfos = await GetColumns(tableName, connectionHandler, type);
             var whereClause = string.Join(" AND ", 
-                columnInfos.Where(_ => _.IsKey).Select(_ => $"{_.ColumnName.EscapedName()}=@{type.EntityColumnName(_.ColumnName)}"));
+                columnInfos.Where(_ => _.IsKey).Select(_ => $"{_.ColumnName.EscapedName(adapter)}=@{type.EntityColumnName(_.ColumnName)}"));
             
             var query = new Query($@"
 DELETE FROM {tableName}
@@ -108,10 +114,12 @@ WHERE {whereClause}", param);
             
             var columnInfos = await GetColumns(tableName, connectionHandler, type);
             
+            var adapter = await connectionHandler.Handle(connection => Task.FromResult(connection.Adapter()));
+
             var selectClause = string.Join(",", 
-                columnInfos.Select(_ => _.ColumnName.EscapedName()));
+                columnInfos.Select(_ => _.ColumnName.EscapedName(adapter)));
             var whereClause = string.Join(" AND ", 
-                columnInfos.Where(_ => _.IsKey).Select(_ => $"{_.ColumnName.EscapedName()}=@{type.EntityColumnName(_.ColumnName)}"));
+                columnInfos.Where(_ => _.IsKey).Select(_ => $"{_.ColumnName.EscapedName(adapter)}=@{type.EntityColumnName(_.ColumnName)}"));
             
             var query = new Query($@"
 SELECT {selectClause}
@@ -121,7 +129,7 @@ WHERE {whereClause}", param);
             return await query.Single<T>(connectionHandler);
         }
 
-        private static string EscapedName(this string name) => $"\"{name}\"";
+        private static string EscapedName(this string name, ISqlAdapter adapter) => adapter.EscapedName(name);
         
         private static bool IsReadOnly(this ColumnInfo columnInfo, Type type) => type.ColumnIsReadOnly(columnInfo.ColumnName);
 

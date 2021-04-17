@@ -8,5 +8,7 @@ namespace PlainQueryExtensions.SqlServer
 INSERT INTO {table} ({columnsClause}) 
 OUTPUT inserted.{outClause}
 VALUES ({valuesClause})";
+
+        public string EscapedName(string name) => $"[{name}]";
     }
 }

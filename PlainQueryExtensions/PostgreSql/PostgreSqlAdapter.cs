@@ -12,5 +12,7 @@ namespace PlainQueryExtensions.PostgreSql
 INSERT INTO {table} ({columnsClause}) 
 VALUES ({valuesClause})
 RETURNING {outClause}";
+        
+        public string EscapedName(string name) => $"\"{name}\"";
     }
 }
