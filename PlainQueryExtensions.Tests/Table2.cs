@@ -4,6 +4,7 @@ namespace PlainQueryExtensions.Tests
     {
         public int Id { get; set; }
         public string? Text { get; set; }
-        public int ComputedColumn1 { get; set; }        
+        [ReadOnly]
+        public int ReadOnlyColumn1 { get; set; }        
     }
 }

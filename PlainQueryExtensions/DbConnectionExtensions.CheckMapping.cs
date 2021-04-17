@@ -61,61 +61,65 @@ namespace PlainQueryExtensions
             }
             else
             {
-                var properties = type.GetProperties();
-                var propertiesByName = properties.ToDictionary(_ => _.Name);
 
                 for (var ordinal = 0; ordinal < reader.FieldCount; ordinal++)
                 {
                     var name = reader.GetName(ordinal);
-                    PropertyInfo propertyInfo;
-                    if (propertiesByName.TryGetValue(name, out var value))
-                        propertyInfo = value;
-                    else
-                    {
-                        var property = FindProperty(properties, name);
-                        if (property == null)
-                            throw reader.GetException($"Property '{name}' not found in destination type.", type);
-                        propertyInfo = property;
-                    }
 
+                    var propertyInfo = type.FindProperty(name);
+                    if (propertyInfo == null)
+                        throw reader.GetException($"Property '{name}' not found in destination type.", type);
+                    
                     CheckFieldType(reader, ordinal, propertyInfo.PropertyType, type);
                 }
             }
         }
 
-        internal static string EntityColumnName(this Type type, string name)
-        {
-            var key = new EntityColumnNameKey(type, name);
-            if (_columnDictionary.TryGetValue(key, out var value))
-                return value;
-
-            string Find()
-            {
-                var properties = type.GetProperties();
-
-                if (properties.All(p => p.Name != name))
-                {
-                    var property = FindProperty(properties, name);
-                    if (property != null)
-                        return property.Name;
-                }
-
-                return name;
-            }
-
-            var columnName = Find();
-
-            _columnDictionary.TryAdd(key, columnName);
-            
-            return columnName;
-        }
-        
-        private static readonly ConcurrentDictionary<EntityColumnNameKey, string> _columnDictionary = new();
+        private static readonly ConcurrentDictionary<EntityColumnNameKey, PropertyInfo?> _columnDictionary = new();
 
         private record EntityColumnNameKey(Type Type, string ColumnName)
         {
         }
 
+        internal static string EntityColumnName(this Type type, string name)
+        {
+            var property = type.FindProperty(name);
+            return property != null ? property.Name : name;
+        }
+
+        internal static PropertyInfo? FindProperty(this Type type, string name)
+        {
+            var key = new EntityColumnNameKey(type, name);
+            if (_columnDictionary.TryGetValue(key, out var value))
+                return value;
+
+            PropertyInfo? Find()
+            {
+                var properties = type.GetProperties();
+
+                {
+                    var property = properties.SingleOrDefault(p => p.Name == name);
+                    if (property != null)
+                        return property;
+                }
+
+                {
+                    var property = FindProperty(properties, name);
+                    if (property != null)
+                        return property;
+                }
+                
+                return null;
+            }
+
+            var propertyInfo = Find();
+
+            _columnDictionary.TryAdd(key, propertyInfo);
+            
+            return propertyInfo;
+        }
+        
+        
         private static PropertyInfo? FindProperty(PropertyInfo[] properties, string name)
         {
             if (DefaultTypeMap.MatchNamesWithUnderscores == false)

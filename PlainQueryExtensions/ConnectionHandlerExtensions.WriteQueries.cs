@@ -18,7 +18,7 @@ namespace PlainQueryExtensions
             var table = GetTableName(type);
             var columnInfos = await GetColumns(table, connectionHandler, type);
             var notAutoIncrementColumns = columnInfos
-                .Where(_ => !_.IsAutoIncrement && !_.IsComputed)
+                .Where(_ => !_.IsAutoIncrement && !_.IsReadOnly(type))
                 .ToList();
             var columnsClause = string.Join(",", notAutoIncrementColumns.Select(_ => _.ColumnName.EscapedName()));
             var autoIncrementColumn = columnInfos.SingleOrDefault(_ => _.IsAutoIncrement);
@@ -39,7 +39,7 @@ VALUES ({valuesClause})", param);
             var table = GetTableName(type);
             var columnInfos = await GetColumns(table, connectionHandler, type);
             var columns = columnInfos
-                .Where(_ => !_.IsAutoIncrement && !_.IsComputed)
+                .Where(_ => !_.IsAutoIncrement && !_.IsReadOnly(type))
                 .ToList();
             var columnsClause = string.Join(",", columns.Select(_ => _.ColumnName.EscapedName()));
             var valuesClause = string.Join(",", columns.Select(_ => $"@{type.EntityColumnName(_.ColumnName)}"));
@@ -56,7 +56,7 @@ VALUES ({valuesClause})", param);
             var columnInfos = await GetColumns(table, connectionHandler, type);
             var setClause = string.Join(",",
                 columnInfos
-                    .Where(_ => !_.IsKey && !_.IsComputed)
+                    .Where(_ => !_.IsKey && !_.IsReadOnly(type))
                     .Select(_ => $"{_.ColumnName.EscapedName()}=@{_.ColumnName}"));
             var whereClause = string.Join(" AND ", 
                 columnInfos.Where(_ => _.IsKey).Select(_ => $"{_.ColumnName.EscapedName()}=@{type.EntityColumnName(_.ColumnName)}"));
@@ -98,6 +98,37 @@ WHERE {whereClause}", param);
 
         private static string EscapedName(this string name) => $"[{name}]";
         
+        private static bool IsReadOnly(this ColumnInfo columnInfo, Type type) => type.ColumnIsReadOnly(columnInfo.ColumnName);
+
+        private static bool ColumnIsReadOnly(this Type type, string columnName)
+        {
+            var key = new IsReadOnlyKey(type, columnName);
+            if (_isReadOnlyDictionary.TryGetValue(key, out var value))
+                return value;
+
+            bool Find()
+            {
+                var property = type.FindProperty(columnName);
+
+                if (property == null)
+                    return false;
+
+                return Attribute.IsDefined(property, typeof(ReadOnlyAttribute));
+            }
+
+            var result = Find();
+
+            _isReadOnlyDictionary.TryAdd(key, result);
+
+            return result;
+        }
+
+        private static readonly ConcurrentDictionary<IsReadOnlyKey, bool> _isReadOnlyDictionary = new();
+
+        private record IsReadOnlyKey(Type Type, string ColumnName)
+        {
+        }
+
         private static string GetTableName(Type type)
         {
             if (_tableNameDictionary.TryGetValue(type, out var value))
@@ -136,19 +167,11 @@ WHERE {whereClause}", param);
             return connectionHandler.Handle(async connection =>
             {
                 await connection.OpenIfClosedAsync();
-
-                var computedColumns = new HashSet<string>();
-                await using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = $"SELECT name FROM sys.computed_columns WHERE object_id = OBJECT_ID('{table}')";
-                    await using (var reader = await command.ExecuteReaderAsync())
-                        while (await reader.ReadAsync())
-                            computedColumns.Add(reader.GetString(0));
-                }
                 
                 await using (var command = connection.CreateCommand())
                 {
                     command.CommandText = $"SELECT * FROM {table}";
+                    
                     await using (var reader = await command.ExecuteReaderAsync(CommandBehavior.SchemaOnly | CommandBehavior.KeyInfo))
                     {
                         reader.CheckMapping(type);
@@ -162,8 +185,7 @@ WHERE {whereClause}", param);
                                 return new ColumnInfo(
                                     columnName,
                                     true.Equals(row["IsKey"]),
-                                    true.Equals(row["IsAutoIncrement"]),
-                                    computedColumns.Contains(columnName));
+                                    true.Equals(row["IsAutoIncrement"]));
                             })
                             .ToList();
                     }
@@ -171,7 +193,7 @@ WHERE {whereClause}", param);
             });
         }
         
-        private record ColumnInfo(string ColumnName, bool IsKey, bool IsAutoIncrement, bool IsComputed)
+        private record ColumnInfo(string ColumnName, bool IsKey, bool IsAutoIncrement)
         {
         }
     }

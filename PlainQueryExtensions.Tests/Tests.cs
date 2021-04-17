@@ -172,7 +172,7 @@ SELECT
         }
         
         [Fact]
-        public async Task InsertUpdate_ComputedColumn1_Success()
+        public async Task InsertUpdate_ReadOnlyColumn1_Success()
         {
             int id;
             {
@@ -182,7 +182,7 @@ SELECT
             }
             {
                 var entity = await Db.GetByKey<Table2>(new {Id = id});  
-                Assert.Equal(1, entity.ComputedColumn1);
+                Assert.Equal(1, entity.ReadOnlyColumn1);
                 entity.Text = "Test2";
                 await Db.Update(entity);
                 Assert.Equal("Test2", await new Query("SELECT Text FROM Table2s WHERE Id = @id", new {id}).Single<string>(Db));

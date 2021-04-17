@@ -12,7 +12,7 @@ INSERT INTO Posts (Text, CreationDate)
 CREATE TABLE Table2s (
     Id INT IDENTITY PRIMARY KEY,
     Text NVARCHAR(MAX) NULL,
-    ComputedColumn1 AS 1
+    ReadOnlyColumn1 AS 1
 );
 
 CREATE TABLE Comment2s (
