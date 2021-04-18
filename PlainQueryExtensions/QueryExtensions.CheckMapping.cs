@@ -15,9 +15,9 @@ using PlainQueryExtensions.SqlServer;
 
 namespace PlainQueryExtensions
 {
-    public static partial class DbConnectionExtensions
+    public static partial class QueryExtensions
     {
-        private static async Task CheckMapping<T>(DbConnection connection, Query query)
+        internal static async Task CheckMapping<T>(this Query query, DbConnection connection)
         {
             if (!MappingCheckSettings.MappingCheckEnabled)
                 return;
