@@ -77,8 +77,8 @@ namespace PlainQuery
         
         public static Task<int> Execute(this Query query, IDbExecutor<DbConnection> executor)
             => executor.ExecAsync(query.Execute);
-        
-        private static DynamicParameters GetDynamicParameters(this Query query)
+
+        public static DynamicParameters GetDynamicParameters(this Query query)
         {
             var dynamicParameters = new DynamicParameters();
             foreach (var parameter in query.Parameters)
