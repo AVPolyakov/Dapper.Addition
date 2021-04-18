@@ -1,6 +1,6 @@
 namespace PlainQuery
 {
-    public static class QueryExtensions
+    public static partial class QueryExtensions
     {
         public static Query Append(this Query query, string queryText)
         {
