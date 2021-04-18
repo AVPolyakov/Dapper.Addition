@@ -16,7 +16,7 @@ namespace PlainQuery
 {
     public static partial class QueryExtensions
     {
-        internal static async Task CheckMapping<T>(this Query query, DbConnection connection)
+        private static async Task CheckMapping<T>(this Query query, DbConnection connection)
         {
             if (!MappingCheckSettings.MappingCheckEnabled)
                 return;
@@ -30,7 +30,7 @@ namespace PlainQuery
                 command.AddParams(query);
 
                 await using (var reader = await command.ExecuteReaderAsync(CommandBehavior.SchemaOnly)) 
-                    reader.CheckMapping<T>(connection);
+                    reader.CheckMapping(typeof(T), connection);
             }
         }
         
@@ -40,14 +40,6 @@ namespace PlainQuery
                 await connection.OpenAsync();
         }
         
-        internal static void CheckMapping<T>(this DbDataReader reader, DbConnection connection)
-        {
-            if (!MappingCheckSettings.MappingCheckEnabled)
-                return;
-            
-            reader.CheckMapping(typeof(T), connection);
-        }
-
         internal static void CheckMapping(this DbDataReader reader, Type type, DbConnection connection)
         {
             if (!MappingCheckSettings.MappingCheckEnabled)
