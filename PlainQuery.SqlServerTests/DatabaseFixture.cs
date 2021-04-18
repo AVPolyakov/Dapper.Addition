@@ -10,11 +10,11 @@ namespace PlainQuery.SqlServerTests
     public class DatabaseFixture: IAsyncLifetime
     {
         private const string DatabaseName = "PlainQuery";
-        public static readonly ConnectionHandler Db = new(@$"Data Source=(local)\SQL2014;Initial Catalog={DatabaseName};Integrated Security=True");
+        public static readonly DbExecutor Db = new(@$"Data Source=(local)\SQL2014;Initial Catalog={DatabaseName};Integrated Security=True");
         
         public async Task InitializeAsync()
         {
-            var db = new ConnectionHandler(new SqlConnectionStringBuilder(Db.ConnectionString) {InitialCatalog = "master"}.ConnectionString);
+            var db = new DbExecutor(new SqlConnectionStringBuilder(Db.ConnectionString) {InitialCatalog = "master"}.ConnectionString);
             await new Query(@$"
 IF EXISTS ( SELECT * FROM sys.databases WHERE name = '{DatabaseName}' )
     DROP DATABASE [{DatabaseName}]

@@ -7,7 +7,7 @@ namespace PlainQuery.PostgreSqlTests
     [Collection(nameof(DatabaseCollection))]
     public class MappingCheckTests
     {
-        private static ConnectionHandler Db => DatabaseFixture.Db;
+        private static DbExecutor Db => DatabaseFixture.Db;
 
         public MappingCheckTests() => MappingCheckSettings.MappingCheckEnabled = true;
 

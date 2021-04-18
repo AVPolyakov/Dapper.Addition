@@ -11,7 +11,7 @@ namespace PlainQuery.SqlServerTests
     [Collection(nameof(DatabaseCollection))]
     public class Tests: TestBase
     {
-        private static ConnectionHandler Db => DatabaseFixture.Db;
+        private static DbExecutor Db => DatabaseFixture.Db;
 
         public Tests() => MappingCheckSettings.MappingCheckEnabled = true;
 

@@ -57,26 +57,26 @@ namespace PlainQuery
             return connection.ExecuteAsync(query.StringBuilder.ToString(), query.GetDynamicParameters());
         }
         
-        public static Task<List<T>> ToList<T>(this Query query, IHandler<DbConnection> connectionHandler) 
-            => connectionHandler.Handle(query.ToList<T>);
+        public static Task<List<T>> ToList<T>(this Query query, IDbExecutor<DbConnection> executor) 
+            => executor.ExecAsync(query.ToList<T>);
 
-        public static Task<T[]> ToArray<T>(this Query query, IHandler<DbConnection> connectionHandler)
-            => connectionHandler.Handle(query.ToArray<T>);
+        public static Task<T[]> ToArray<T>(this Query query, IDbExecutor<DbConnection> executor)
+            => executor.ExecAsync(query.ToArray<T>);
         
-        public static Task<T> Single<T>(this Query query, IHandler<DbConnection> connectionHandler)
-            => connectionHandler.Handle(query.Single<T>);
+        public static Task<T> Single<T>(this Query query, IDbExecutor<DbConnection> executor)
+            => executor.ExecAsync(query.Single<T>);
         
-        public static Task<T> SingleOrDefault<T>(this Query query, IHandler<DbConnection> connectionHandler)
-            => connectionHandler.Handle(query.SingleOrDefault<T>);
+        public static Task<T> SingleOrDefault<T>(this Query query, IDbExecutor<DbConnection> executor)
+            => executor.ExecAsync(query.SingleOrDefault<T>);
         
-        public static Task<T> First<T>(this Query query, IHandler<DbConnection> connectionHandler)
-            => connectionHandler.Handle(query.First<T>);
+        public static Task<T> First<T>(this Query query, IDbExecutor<DbConnection> executor)
+            => executor.ExecAsync(query.First<T>);
         
-        public static Task<T> FirstOrDefault<T>(this Query query, IHandler<DbConnection> connectionHandler)
-            => connectionHandler.Handle(query.FirstOrDefault<T>);
+        public static Task<T> FirstOrDefault<T>(this Query query, IDbExecutor<DbConnection> executor)
+            => executor.ExecAsync(query.FirstOrDefault<T>);
         
-        public static Task<int> Execute(this Query query, IHandler<DbConnection> connectionHandler)
-            => connectionHandler.Handle(query.Execute);
+        public static Task<int> Execute(this Query query, IDbExecutor<DbConnection> executor)
+            => executor.ExecAsync(query.Execute);
         
         private static DynamicParameters GetDynamicParameters(this Query query)
         {
