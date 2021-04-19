@@ -25,7 +25,7 @@ namespace PlainQuery
 
             await using (var command = connection.CreateCommand())
             {
-                command.CommandText = query.StringBuilder.ToString();
+                command.CommandText = query.ToString();
 
                 command.AddParams(query);
 

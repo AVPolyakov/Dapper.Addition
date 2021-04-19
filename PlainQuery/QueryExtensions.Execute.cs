@@ -12,7 +12,7 @@ namespace PlainQuery
         {
             await query.CheckMapping<T>(connection);
             
-            var enumerable = await connection.QueryAsync<T>(query.StringBuilder.ToString(), query.GetDynamicParameters());
+            var enumerable = await connection.QueryAsync<T>(query.ToString(), query.GetDynamicParameters());
             return enumerable.AsList();
         }
         
@@ -20,7 +20,7 @@ namespace PlainQuery
         {
             await query.CheckMapping<T>(connection);
             
-            var enumerable = await connection.QueryAsync<T>(query.StringBuilder.ToString(), query.GetDynamicParameters());
+            var enumerable = await connection.QueryAsync<T>(query.ToString(), query.GetDynamicParameters());
             return enumerable.ToArray();
         }
         
@@ -28,33 +28,33 @@ namespace PlainQuery
         {
             await query.CheckMapping<T>(connection);
             
-            return await connection.QuerySingleAsync<T>(query.StringBuilder.ToString(), query.GetDynamicParameters());
+            return await connection.QuerySingleAsync<T>(query.ToString(), query.GetDynamicParameters());
         }
         
         public static async Task<T> SingleOrDefault<T>(this Query query, DbConnection connection)
         {
             await query.CheckMapping<T>(connection);
             
-            return await connection.QuerySingleOrDefaultAsync<T>(query.StringBuilder.ToString(), query.GetDynamicParameters());
+            return await connection.QuerySingleOrDefaultAsync<T>(query.ToString(), query.GetDynamicParameters());
         }
         
         public static async Task<T> First<T>(this Query query, DbConnection connection)
         {
             await query.CheckMapping<T>(connection);
             
-            return await connection.QueryFirstAsync<T>(query.StringBuilder.ToString(), query.GetDynamicParameters());
+            return await connection.QueryFirstAsync<T>(query.ToString(), query.GetDynamicParameters());
         }
         
         public static async Task<T> FirstOrDefault<T>(this Query query, DbConnection connection)
         {
             await query.CheckMapping<T>(connection);
             
-            return await connection.QueryFirstOrDefaultAsync<T>(query.StringBuilder.ToString(), query.GetDynamicParameters());
+            return await connection.QueryFirstOrDefaultAsync<T>(query.ToString(), query.GetDynamicParameters());
         }
         
         public static Task<int> Execute(this Query query, DbConnection connection)
         {
-            return connection.ExecuteAsync(query.StringBuilder.ToString(), query.GetDynamicParameters());
+            return connection.ExecuteAsync(query.ToString(), query.GetDynamicParameters());
         }
         
         public static Task<List<T>> ToList<T>(this Query query, IDbExecutor<DbConnection> executor) 
