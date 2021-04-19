@@ -21,15 +21,15 @@ namespace PlainQuery
             
             var adapter = connection.Adapter();
             
-            var notAutoIncrementColumns = columnInfos
+            var writeableColumns = columnInfos
                 .Where(_ => !_.IsAutoIncrement && !_.IsReadOnly(type))
                 .ToList();
-            var columnsClause = string.Join(",", notAutoIncrementColumns.Select(_ => _.ColumnName.EscapedName(adapter)));
+            var columnsClause = string.Join(",", writeableColumns.Select(_ => _.ColumnName.EscapedName(adapter)));
             var autoIncrementColumn = columnInfos.SingleOrDefault(_ => _.IsAutoIncrement);
             if (autoIncrementColumn == null)
                 throw new Exception("Auto increment column not found.");
             var outClause = autoIncrementColumn.ColumnName.EscapedName(adapter);
-            var valuesClause = string.Join(",", notAutoIncrementColumns.Select(_ => $"@{type.EntityColumnName(_.ColumnName)}"));
+            var valuesClause = string.Join(",", writeableColumns.Select(_ => $"@{type.EntityColumnName(_.ColumnName)}"));
             
             var queryText = adapter.InsertQueryText(table, columnsClause, valuesClause, outClause);
             
