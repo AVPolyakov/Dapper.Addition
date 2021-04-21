@@ -184,8 +184,11 @@ WHERE {whereClause}", param);
             if (_columnDictionary.TryGetValue(tableKey, out var value)) 
                 return value;
             
-            var result = await GetColumnEnumerable(table, connection, type);
+            var columnsFromDb = await GetColumnsFromDb(table, connection, type);
+            var result = columnsFromDb.Where(c => type.FindProperty(c.ColumnName) != null).ToList();
+            
             _columnDictionary[tableKey] = result;
+            
             return result;
         }
 
@@ -193,7 +196,7 @@ WHERE {whereClause}", param);
         {
         }
 
-        private static async Task<List<ColumnInfo>> GetColumnEnumerable(string table, DbConnection connection, Type type)
+        private static async Task<List<ColumnInfo>> GetColumnsFromDb(string table, DbConnection connection, Type type)
         {
             await connection.OpenIfClosedAsync();
 
