@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net5.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <TreatWarningsAsErrors />
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\PlainSql\PlainSql.csproj" />
+    </ItemGroup>
+
+</Project>
