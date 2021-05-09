@@ -6,11 +6,11 @@ namespace PlainSql
 {
     public interface IDbExecutor<out TDbConnection>
     {
-        Task<TResult> ExecAsync<TResult>(Func<TDbConnection, Task<TResult>> func);
+        Task<TResult> ExecuteAsync<TResult>(Func<TDbConnection, Task<TResult>> func);
 
-        public async Task ExecAsync(Func<TDbConnection, Task> func)
+        public async Task ExecuteAsync(Func<TDbConnection, Task> func)
         {
-            await ExecAsync<object?>(async connection =>
+            await ExecuteAsync<object?>(async connection =>
             {
                 await func(connection);
                 return null;

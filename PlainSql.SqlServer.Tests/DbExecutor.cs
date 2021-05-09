@@ -11,7 +11,7 @@ namespace PlainSql.SqlServer.Tests
 
         public DbExecutor(string connectionString) => _connectionString = connectionString;
 
-        public async Task<TResult> ExecAsync<TResult>(Func<IDbConnection, Task<TResult>> func)
+        public async Task<TResult> ExecuteAsync<TResult>(Func<IDbConnection, Task<TResult>> func)
         {
             await using (var connection = new SqlConnection(_connectionString))
                 return await func(connection);
