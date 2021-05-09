@@ -5,19 +5,19 @@ namespace PlainSql
 {
     public static partial class DbExecutorExtensions
     {
-        public static Task<TKey> Insert<TKey>(this IDbExecutor<IDbConnection> executor, object param) 
-            => executor.ExecuteAsync(connection => connection.Insert<TKey>(param));
+        public static Task<TKey> InsertAsync<TKey>(this IDbExecutor<IDbConnection> executor, object param) 
+            => executor.ExecuteAsync(connection => connection.InsertAsync<TKey>(param));
         
-        public static Task<int> Insert(this IDbExecutor<IDbConnection> executor, object param) 
-            => executor.ExecuteAsync(connection => connection.Insert(param));
+        public static Task<int> InsertAsync(this IDbExecutor<IDbConnection> executor, object param) 
+            => executor.ExecuteAsync(connection => connection.InsertAsync(param));
         
-        public static Task<int> Update(this IDbExecutor<IDbConnection> executor, object param) 
-            => executor.ExecuteAsync(connection => connection.Update(param));
+        public static Task<int> UpdateAsync(this IDbExecutor<IDbConnection> executor, object param) 
+            => executor.ExecuteAsync(connection => connection.UpdateAsync(param));
         
-        public static Task<int> Delete<T>(this IDbExecutor<IDbConnection> executor, object param) 
-            => executor.ExecuteAsync(connection => connection.Delete<T>(param));
+        public static Task<int> DeleteAsync<T>(this IDbExecutor<IDbConnection> executor, object param) 
+            => executor.ExecuteAsync(connection => connection.DeleteAsync<T>(param));
         
-        public static Task<T> GetByKey<T>(this IDbExecutor<IDbConnection> executor, object param) 
-            => executor.ExecuteAsync(connection => connection.GetByKey<T>(param));
+        public static Task<T> GetByKeyAsync<T>(this IDbExecutor<IDbConnection> executor, object param) 
+            => executor.ExecuteAsync(connection => connection.GetByKeyAsync<T>(param));
     }
 }

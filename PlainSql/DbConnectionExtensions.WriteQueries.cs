@@ -11,7 +11,7 @@ namespace PlainSql
 {
     public static partial class DbConnectionExtensions
     {
-        public static async Task<TKey> Insert<TKey>(this IDbConnection connection, object param)
+        public static async Task<TKey> InsertAsync<TKey>(this IDbConnection connection, object param)
         {
             var type = param.GetType();
             
@@ -36,7 +36,7 @@ namespace PlainSql
             return await connection.QuerySingleAsync<TKey>(sql);
         }
         
-        public static async Task<int> Insert(this IDbConnection connection, object param)
+        public static async Task<int> InsertAsync(this IDbConnection connection, object param)
         {
             var type = param.GetType();
             
@@ -57,7 +57,7 @@ VALUES ({valuesClause})", param);
             return await connection.ExecuteAsync(sql);
         }
         
-        public static async Task<int> Update(this IDbConnection connection, object param)
+        public static async Task<int> UpdateAsync(this IDbConnection connection, object param)
         {
             var type = param.GetType();
             
@@ -80,7 +80,7 @@ WHERE {whereClause}", param);
             return await connection.ExecuteAsync(sql);
         }
 
-        public static async Task<int> Delete<T>(this IDbConnection connection, object param)
+        public static async Task<int> DeleteAsync<T>(this IDbConnection connection, object param)
         {
             var type = typeof(T);
             
@@ -97,7 +97,7 @@ WHERE {whereClause}", param);
             return await connection.ExecuteAsync(sql);
         }
         
-        public static async Task<T> GetByKey<T>(this IDbConnection connection, object param)
+        public static async Task<T> GetByKeyAsync<T>(this IDbConnection connection, object param)
         {
             var type = typeof(T);
             
