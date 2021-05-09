@@ -43,14 +43,9 @@ ORDER BY p.PostId", new {date});
         [Fact]
         public async Task Posts_DynamicSql_Success()
         {
-            {
-                var postInfos = await GetPosts(new DateTime(2015, 1, 1));
-                Assert.Equal(2, postInfos.Count);
-            }
-            {
-                var postInfos = await GetPosts(new DateTime(3015, 1, 1));
-                Assert.Empty(postInfos);
-            }
+            var postInfos = await GetPosts(new DateTime(2015, 1, 1));
+            
+            Assert.Equal(2, postInfos.Count);
         }
 
         private Task<List<PostInfo>> GetPosts(DateTime? date)
@@ -121,53 +116,6 @@ FROM Posts p
 WHERE p.CreationDate >= @fromDate
 ", new {fromDate});
         }
-
-        [Fact]
-        public async Task ScalarType_Success()
-        {
-            var single = await _db.QuerySingleAsync<string>(new Sql("SELECT @A1 AS A1",
-                new
-                {
-                    A1 = "Test3"
-                }));
-            
-            Assert.Equal("Test3", single);
-        }        
-        
-        [Fact]
-        public async Task Enum_Success()
-        {
-            Enum1? a2 = Enum1.Item2;
-            Enum1? a3 = null;
-            Enum2? a5 = Enum2.Item2;
-            Enum2? a6 = null;
-            
-            var record1 = await _db.QuerySingleAsync<Record1>(new Sql(@"
-SELECT 
-    @A1 AS A1,
-    @A2 AS A2,
-    @A3 AS A3,
-    @A4 AS A4,
-    @A5 AS A5,
-    @A6 AS A6
-",
-                new
-                {
-                    A1 = Enum1.Item2,
-                    A2 = a2,
-                    A3 = a3,
-                    A4 = Enum2.Item2,
-                    A5 = a5,
-                    A6 = a6,
-                }));
-            
-            Assert.Equal(Enum1.Item2, record1.A1);
-            Assert.Equal(a2, record1.A2);
-            Assert.Equal(a3, record1.A3);
-            Assert.Equal(Enum2.Item2, record1.A4);
-            Assert.Equal(a5, record1.A5);
-            Assert.Equal(a6, record1.A6);
-        }
         
         [Fact]
         public async Task InsertUpdate_ReadOnlyColumn1_Success()
@@ -236,37 +184,6 @@ FROM @Customers",
             var customers = await _db.QueryListAsync<Customer>(sql);
             Assert.Equal(5, customers.Count);
             Assert.Equal("Code_4", customers[4].Code);
-        }
-        
-        [Fact]
-        public async Task QueryAndSubquery_Success()
-        {
-            var clientsSql = Clients(new Sql());
-            var clientIds = await _db.QueryListAsync<int>(clientsSql);
-
-            var documentsSql = new Sql();
-            documentsSql.Append($@"
-SELECT d.Id, d.ClientId
-FROM Documents d
-WHERE d.ClientId IN ({Clients(documentsSql)})
-    AND d.CreationDate >= @date", new {date = new DateTime(2015, 1, 1)});
-
-            var documentInfos = await _db.QueryListAsync<DocumentInfo>(documentsSql);
-            
-            Assert.NotEmpty(clientIds);
-            Assert.NotEmpty(documentInfos);
-        }
-
-        private static Sql Clients(Sql sql)
-        {
-            return sql.Sql(@"
-SELECT c.Id
-FROM Clients c
-WHERE c.Id = @CurrentClientId",
-                new
-                {
-                    CurrentClientId = 1
-                });
         }
     }
 }

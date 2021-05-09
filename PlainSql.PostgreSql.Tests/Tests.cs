@@ -41,14 +41,9 @@ ORDER BY p.post_id", new {date});
         [Fact]
         public async Task Posts_DynamicSql_Success()
         {
-            {
-                var postInfos = await GetPosts(new DateTime(2015, 1, 1));
-                Assert.Equal(2, postInfos.Count);
-            }
-            {
-                var postInfos = await GetPosts(new DateTime(3015, 1, 1));
-                Assert.Empty(postInfos);
-            }
+            var postInfos = await GetPosts(new DateTime(2015, 1, 1));
+            
+            Assert.Equal(2, postInfos.Count);
         }
 
         private Task<List<PostInfo>> GetPosts(DateTime? date)
@@ -118,53 +113,6 @@ SELECT *
 FROM posts p
 WHERE p.creation_date >= @fromDate
 ", new {fromDate});
-        }
-
-        [Fact]
-        public async Task ScalarType_Success()
-        {
-            var single = await _db.QuerySingleAsync<string>(new Sql("SELECT @A1 AS A1",
-                new
-                {
-                    A1 = "Test3"
-                }));
-            
-            Assert.Equal("Test3", single);
-        }        
-        
-        [Fact]
-        public async Task Enum_Success()
-        {
-            Enum1? a2 = Enum1.Item2;
-            Enum1? a3 = null;
-            Enum2? a5 = Enum2.Item2;
-            Enum2? a6 = null;
-            
-            var record1 = await _db.QuerySingleAsync<Record1>(new Sql(@"
-SELECT 
-    @A1 AS A1,
-    @A2 AS A2,
-    @A3 AS A3,
-    @A4 AS A4,
-    @A5 AS A5,
-    @A6 AS A6
-",
-                new
-                {
-                    A1 = Enum1.Item2,
-                    A2 = a2,
-                    A3 = a3,
-                    A4 = Enum2.Item2,
-                    A5 = a5,
-                    A6 = a6,
-                }));
-            
-            Assert.Equal(Enum1.Item2, record1.A1);
-            Assert.Equal(a2, record1.A2);
-            Assert.Equal(a3, record1.A3);
-            Assert.Equal(Enum2.Item2, record1.A4);
-            Assert.Equal(a5, record1.A5);
-            Assert.Equal(a6, record1.A6);
         }
         
         [Fact]
