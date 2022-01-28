@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Data;
 using System.Threading.Tasks;
+using Dapper;
 
 namespace PlainSql
 {
@@ -29,5 +30,11 @@ namespace PlainSql
 
         public static Task<int> ExecuteAsync(this IDbExecutor<IDbConnection> executor, Sql sql)
             => executor.ExecuteAsync(connection => connection.ExecuteAsync(sql));
+        
+        public static Task<T> QuerySingleAsync<T>(this IDbExecutor<IDbConnection> executor, string sql, object? param = null)
+            => executor.ExecuteAsync(connection => connection.QuerySingleAsync<T>(sql, param));
+        
+        public static Task<int> ExecuteAsync(this IDbExecutor<IDbConnection> executor, string sql, object? param = null)
+            => executor.ExecuteAsync(connection => connection.ExecuteAsync(sql, param));
     }
 }

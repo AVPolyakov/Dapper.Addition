@@ -21,7 +21,7 @@ namespace PlainSql.SqlServer.Tests
 
         private static string ConnectionString => new SqlConnectionStringBuilder(DefaultConnectionString) {InitialCatalog = DatabaseName}.ConnectionString;
         
-        private const string DefaultConnectionString = @"Data Source=(local)\SQL2014;Initial Catalog=master;Integrated Security=True";
+        private const string DefaultConnectionString = @"Data Source=(local);Initial Catalog=master;Integrated Security=True";
         
         private const string DatabaseName = "PlainSql";
         
