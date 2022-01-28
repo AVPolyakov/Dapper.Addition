@@ -14,7 +14,6 @@ namespace PlainSql.SqlServer.Tests
         private readonly ISavepointExecutor? _savepointExecutor;
         private readonly SavepointInfo? _savepointInfo;
         private readonly TransactionScope _transactionScope;
-        private bool _complete;
         
         public LocalTransactionScope(ISavepointExecutor? savepointExecutor = null)
         {
@@ -39,7 +38,8 @@ namespace PlainSql.SqlServer.Tests
 
         public void Complete()
         {
-            _complete = true;
+            if (_savepointInfo != null)
+                _savepointInfo.ScopeIsCompleted = true;
             
             _transactionScope.Complete();
         }
@@ -49,10 +49,10 @@ namespace PlainSql.SqlServer.Tests
             var stack = LocalTransactionScopes.Value;
             if (stack != null && !stack.IsEmpty)
                 LocalTransactionScopes.Value = stack.Pop();
-            
-            if (!_complete)
+
+            if (_savepointInfo != null)
             {
-                if (_savepointInfo != null)
+                if (!_savepointInfo.ScopeIsCompleted)
                 {
                     if (!_savepointInfo.IsRollbacked)
                     {
@@ -68,6 +68,7 @@ namespace PlainSql.SqlServer.Tests
 
         private record SavepointInfo(string Name, ISavepointExecutor Executor)
         {
+            public bool ScopeIsCompleted { get; set; }
             public bool IsRollbacked { get; set; }
         }
 
