@@ -10,6 +10,7 @@ namespace PlainSql.SqlServer.Tests
     public class DatabaseFixture: IAsyncLifetime
     {
         public IDbExecutor Db { get; }
+        public ISavepointExecutor SavepointExecutor { get; }
 
         public DatabaseFixture()
         {
@@ -17,8 +18,9 @@ namespace PlainSql.SqlServer.Tests
             ISqlAdapter.Current = new SqlServerAdapter(); 
             
             Db = new DbExecutor(ConnectionString);
+            SavepointExecutor = new SavepointExecutor(ConnectionString);
         }
-
+        
         private static string ConnectionString => new SqlConnectionStringBuilder(DefaultConnectionString) {InitialCatalog = DatabaseName}.ConnectionString;
         
         private const string DefaultConnectionString = @"Data Source=(local);Initial Catalog=master;Integrated Security=True";

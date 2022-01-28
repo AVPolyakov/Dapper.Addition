@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Threading.Tasks;
-using System.Transactions;
 using Xunit;
 
 namespace PlainSql.SqlServer.Tests
@@ -14,9 +13,11 @@ namespace PlainSql.SqlServer.Tests
         public TransactionScopeTests(TransactionScopeFixture fixture,
             DatabaseFixture databaseFixture)
         {
-            Transaction.Current = fixture.Transaction;
-            _transactionScope = new LocalTransactionScope();
             _db = databaseFixture.Db;
+
+            TransactionAmbientData.Current = fixture.TransactionAmbientData;
+            
+            _transactionScope = LocalTransactionScope.CreateSaved(databaseFixture.SavepointExecutor);
         }
         
         public void Dispose() => _transactionScope.Dispose();
