@@ -9,13 +9,13 @@ namespace PlainSql.SqlServer.Tests
     public class TransactionScopeFixture : IDisposable, IAsyncLifetime 
     {
         private readonly IDbExecutor _db;
-        private readonly TransactionScope _transactionScope;
+        private readonly LocalTransactionScope _transactionScope;
         public Transaction? Transaction { get; }
         
         public TransactionScopeFixture(DatabaseFixture databaseFixture)
         {
             _db = databaseFixture.Db;
-            _transactionScope = TransactionScopeFactory.Create();
+            _transactionScope = new LocalTransactionScope();
             Transaction = Transaction.Current;
         }
         
