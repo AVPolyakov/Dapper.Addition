@@ -6,21 +6,21 @@ namespace SavedTransactionScopes
     public class TransactionAmbientData
     {
         private readonly Transaction? _transaction;
-        private readonly ImmutableStack<LocalTransactionScope>? _localTransactionScopes;
+        private readonly ImmutableStack<SavepointHandler>? _savepointHandlers;
 
-        private TransactionAmbientData(Transaction? transaction, ImmutableStack<LocalTransactionScope>? localTransactionScopes)
+        private TransactionAmbientData(Transaction? transaction, ImmutableStack<SavepointHandler>? savepointHandlers)
         {
             _transaction = transaction;
-            _localTransactionScopes = localTransactionScopes;
+            _savepointHandlers = savepointHandlers;
         }
 
         public static TransactionAmbientData Current
         {
-            get => new(Transaction.Current, LocalTransactionScope.LocalTransactionScopes.Value);
+            get => new(Transaction.Current, SavepointHandler.SavepointHandlers.Value);
             set
             {
                 Transaction.Current = value._transaction;
-                LocalTransactionScope.LocalTransactionScopes.Value = value._localTransactionScopes!;
+                SavepointHandler.SavepointHandlers.Value = value._savepointHandlers!;
             }
         }
     }

@@ -1,81 +1,69 @@
-﻿using System;
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 using System.Data;
 using System.Threading;
 using System.Transactions;
-using IsolationLevel = System.Transactions.IsolationLevel;
 
 namespace SavedTransactionScopes
 {
-    public class LocalTransactionScope: IDisposable
+    public class SavepointHandler
     {
-        internal static AsyncLocal<ImmutableStack<LocalTransactionScope>> LocalTransactionScopes { get; } = new();
+        internal static AsyncLocal<ImmutableStack<SavepointHandler>> SavepointHandlers { get; } = new();
 
-        private readonly ISavepointExecutor? _savepointExecutor;
         private readonly SavepointInfo? _savepointInfo;
-        private readonly TransactionScope _transactionScope;
 
-        public LocalTransactionScope(TransactionScopeOption scopeOption = TransactionScopeOption.Required,
-            ISavepointExecutor? savepointExecutor = null)
+        public ISavepointExecutor? SavepointExecutor { private get; set; }
+        
+        public SavepointHandler(TransactionScopeOption scopeOption)
         {
-            _savepointExecutor = savepointExecutor;
+            var stack = SavepointHandlers.Value ?? ImmutableStack<SavepointHandler>.Empty;
             
-            var stack = LocalTransactionScopes.Value ?? ImmutableStack<LocalTransactionScope>.Empty;
             if (scopeOption == TransactionScopeOption.Required)
             {
                 if (!stack.IsEmpty)
                 {
-                    var parentTransactionScope = stack.Peek();
-                    var executor = parentTransactionScope._savepointExecutor;
+                    var parent = stack.Peek();
+                    var executor = parent.SavepointExecutor;
                     _savepointInfo = executor != null
                         ? new SavepointInfo(executor.Execute(SetSavepoint), executor)
-                        : parentTransactionScope._savepointInfo;
+                        : parent._savepointInfo;
                 }
             }
-            LocalTransactionScopes.Value = stack.Push(this);
             
-            _transactionScope = new TransactionScope(
-                scopeOption,
-                new TransactionOptions{IsolationLevel = IsolationLevel.ReadCommitted},
-                TransactionScopeAsyncFlowOption.Enabled);
+            SavepointHandlers.Value = stack.Push(this);
         }
         
         public void Complete()
         {
             if (_savepointInfo != null)
-                _savepointInfo.ScopeIsCompleted = true;
-            
-            _transactionScope.Complete();
+                _savepointInfo.IsCompleted = true;
         }
-
-        public void Dispose()
+        
+        public void Dispose(TransactionScope transactionScope)
         {
-            var stack = LocalTransactionScopes.Value;
+            var stack = SavepointHandlers.Value;
             if (stack != null && !stack.IsEmpty)
-                LocalTransactionScopes.Value = stack.Pop();
+                SavepointHandlers.Value = stack.Pop();
 
             if (_savepointInfo != null)
             {
-                if (!_savepointInfo.ScopeIsCompleted)
+                if (!_savepointInfo.IsCompleted)
                 {
                     if (!_savepointInfo.IsRollbacked)
                     {
                         _savepointInfo.Executor.Execute(connection => RollbackToSavepoint(connection, _savepointInfo.Name));
                         _savepointInfo.IsRollbacked = true;
                     }
-                    _transactionScope.Complete();
+                    transactionScope.Complete();
                 }
             }
-
-            _transactionScope.Dispose();
         }
-
+        
         private record SavepointInfo(string Name, ISavepointExecutor Executor)
         {
-            public bool ScopeIsCompleted { get; set; }
+            public bool IsCompleted { get; set; }
             public bool IsRollbacked { get; set; }
         }
-
+        
         private static string SetSavepoint(IDbConnection connection)
         {
             var wasClosed = connection.State == ConnectionState.Closed;
@@ -110,11 +98,6 @@ namespace SavedTransactionScopes
                 if (wasClosed)
                     connection.Close();
             }
-        }
-
-        public static LocalTransactionScope CreateSaved(ISavepointExecutor savepointExecutor)
-        {
-            return new LocalTransactionScope(savepointExecutor: savepointExecutor);
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using Dapper.Addition.Shared.Tests;
 using SavedTransactionScopes;
 using Xunit;
 
@@ -19,7 +20,7 @@ namespace Dapper.Addition.PostgreSql.Tests
         [Fact]
         public async Task SavedScope_Success()
         {
-            using (LocalTransactionScope.CreateSaved(_savepointExecutor)) //scope1
+            using (new LocalTransactionScope {SavepointExecutor = _savepointExecutor}) //scope1
             {
                 await _db.InsertAsync(new Client {Id = 2, Name = "Client"});
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Dapper.Addition.Shared.Tests;
 using SavedTransactionScopes;
 using Xunit;
 
@@ -18,7 +19,7 @@ namespace Dapper.Addition.PostgreSql.Tests
 
             TransactionAmbientData.Current = fixture.TransactionAmbientData;
             
-            _transactionScope = LocalTransactionScope.CreateSaved(databaseFixture.SavepointExecutor);
+            _transactionScope = new LocalTransactionScope {SavepointExecutor = databaseFixture.SavepointExecutor};
         }
         
         public void Dispose() => _transactionScope.Dispose();

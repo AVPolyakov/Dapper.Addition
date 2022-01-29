@@ -8,6 +8,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Dapper.Addition\Dapper.Addition.csproj" />
+      <ProjectReference Include="..\SavedTransactionScopes\SavedTransactionScopes.csproj" />
     </ItemGroup>
 
 </Project>

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Dapper.Addition.Shared.Tests;
 using SavedTransactionScopes;
 using Xunit;
 
@@ -16,7 +17,7 @@ namespace Dapper.Addition.SqlServer.Tests
         {
             _db = databaseFixture.Db;
             
-            _transactionScope = LocalTransactionScope.CreateSaved(databaseFixture.SavepointExecutor);
+            _transactionScope = new LocalTransactionScope {SavepointExecutor = databaseFixture.SavepointExecutor};
             TransactionAmbientData = TransactionAmbientData.Current;
         }
 
