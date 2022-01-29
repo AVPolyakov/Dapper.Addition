@@ -24,3 +24,14 @@ CREATE TABLE table5s (
     creation_date TIMESTAMP
 );
 
+CREATE TABLE clients (
+    id INT PRIMARY KEY,
+    name TEXT NULL
+);
+
+CREATE TABLE documents (
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    clientId INT NOT NULL,
+    creation_date TIMESTAMP NOT NULL
+);
+

@@ -33,6 +33,7 @@
     <ItemGroup>
         <ProjectReference Include="..\Dapper.Addition.PostgreSql\Dapper.Addition.PostgreSql.csproj" />
         <ProjectReference Include="..\Dapper.Addition.Shared.Tests\Dapper.Addition.Shared.Tests.csproj" />
+        <ProjectReference Include="..\SavedTransactionScope.PostgreSql\SavedTransactionScope.PostgreSql.csproj" />
     </ItemGroup>
     
 </Project>

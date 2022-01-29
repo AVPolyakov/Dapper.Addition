@@ -2,7 +2,7 @@
 using SavedTransactionScopes;
 using Xunit;
 
-namespace Dapper.Addition.SqlServer.Tests
+namespace Dapper.Addition.PostgreSql.Tests
 {
     [Collection(nameof(FixtureCollection))]
     public class SimpleTransactionScopeTests
@@ -26,34 +26,34 @@ namespace Dapper.Addition.SqlServer.Tests
                 using (new LocalTransactionScope()) //scope2
                 {
                     {
-                        var name = await _db.QuerySingleAsync<string>("SELECT Name FROM Clients WHERE Id = @id", new { id = 2 });
+                        var name = await _db.QuerySingleAsync<string>("SELECT name FROM clients WHERE id = @id", new { id = 2 });
                         Assert.Equal("Client", name);
                     }
 
-                    await _db.ExecuteAsync("UPDATE Clients SET Name = @Name WHERE Id = @Id", new { Name = "Client.v2", Id = 2 });
+                    await _db.ExecuteAsync("UPDATE clients SET name = @Name WHERE id = @Id", new { Name = "Client.v2", Id = 2 });
 
                     {
-                        var name = await _db.QuerySingleAsync<string>("SELECT Name FROM Clients WHERE Id = @id", new { id = 2 });
+                        var name = await _db.QuerySingleAsync<string>("SELECT name FROM clients WHERE id = @id", new { id = 2 });
                         Assert.Equal("Client.v2", name);
                     }
                 } //rollback scope2
-
+                
                 {
-                    var name = await _db.QuerySingleAsync<string>("SELECT Name FROM Clients WHERE Id = @id", new { id = 2 });
+                    var name = await _db.QuerySingleAsync<string>("SELECT name FROM clients WHERE id = @id", new { id = 2 });
                     Assert.Equal("Client", name);
                 }
                 
                 using (var scope3 = new LocalTransactionScope()) //scope3
                 {
                     {
-                        var name = await _db.QuerySingleAsync<string>("SELECT Name FROM Clients WHERE Id = @id", new { id = 2 });
+                        var name = await _db.QuerySingleAsync<string>("SELECT name FROM clients WHERE id = @id", new { id = 2 });
                         Assert.Equal("Client", name);
                     }
 
-                    await _db.ExecuteAsync("UPDATE Clients SET Name = @Name WHERE Id = @Id", new { Name = "Client.v3", Id = 2 });
+                    await _db.ExecuteAsync("UPDATE clients SET name = @Name WHERE id = @Id", new { Name = "Client.v3", Id = 2 });
 
                     {
-                        var name = await _db.QuerySingleAsync<string>("SELECT Name FROM Clients WHERE Id = @id", new { id = 2 });
+                        var name = await _db.QuerySingleAsync<string>("SELECT name FROM clients WHERE id = @id", new { id = 2 });
                         Assert.Equal("Client.v3", name);
                     }
                     
@@ -61,7 +61,7 @@ namespace Dapper.Addition.SqlServer.Tests
                 }
                 
                 {
-                    var name = await _db.QuerySingleAsync<string>("SELECT Name FROM Clients WHERE Id = @id", new { id = 2 });
+                    var name = await _db.QuerySingleAsync<string>("SELECT name FROM clients WHERE id = @id", new { id = 2 });
                     Assert.Equal("Client.v3", name);
                 }
             }

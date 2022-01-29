@@ -33,6 +33,7 @@
     <ItemGroup>
       <ProjectReference Include="..\Dapper.Addition.Shared.Tests\Dapper.Addition.Shared.Tests.csproj" />
       <ProjectReference Include="..\Dapper.Addition.SqlServer\Dapper.Addition.SqlServer.csproj" />
+      <ProjectReference Include="..\SavedTransactionScope.SqlServer\SavedTransactionScope.SqlServer.csproj" />
     </ItemGroup>
     
 </Project>

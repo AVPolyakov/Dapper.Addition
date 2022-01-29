@@ -5,7 +5,7 @@ using System.Threading;
 using System.Transactions;
 using IsolationLevel = System.Transactions.IsolationLevel;
 
-namespace Dapper.Addition.SqlServer.Tests
+namespace SavedTransactionScopes
 {
     public class LocalTransactionScope: IDisposable
     {
@@ -78,7 +78,6 @@ namespace Dapper.Addition.SqlServer.Tests
 
         private static string SetSavepoint(IDbConnection connection)
         {
-            string savePointName;
             var wasClosed = connection.State == ConnectionState.Closed;
             try
             {
@@ -86,22 +85,13 @@ namespace Dapper.Addition.SqlServer.Tests
                     connection.Open();
 
                 using (var command = connection.CreateCommand())
-                {
-                    savePointName = Guid.NewGuid().ToString("N");
-                    command.CommandText = $"SAVE TRANSACTION @SavePointName";
-                    var parameter = command.CreateParameter();
-                    parameter.ParameterName = "@SavePointName";
-                    parameter.Value = savePointName;
-                    command.Parameters.Add(parameter);
-                    command.ExecuteNonQuery();
-                }
+                    return ISavepointAdapter.Current.SetSavepoint(command);
             }
             finally
             {
                 if (wasClosed)
                     connection.Close();
             }
-            return savePointName;
         }
 
         private static void RollbackToSavepoint(IDbConnection connection, string savePointName)
@@ -112,15 +102,8 @@ namespace Dapper.Addition.SqlServer.Tests
                 if (wasClosed)
                     connection.Open();
 
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = $"ROLLBACK TRANSACTION @SavePointName";
-                    var parameter = command.CreateParameter();
-                    parameter.ParameterName = "@SavePointName";
-                    parameter.Value = savePointName;
-                    command.Parameters.Add(parameter);
-                    command.ExecuteNonQuery();
-                }
+                using (var command = connection.CreateCommand()) 
+                    ISavepointAdapter.Current.RollbackToSavepoint(command, savePointName);
             }
             finally
             {

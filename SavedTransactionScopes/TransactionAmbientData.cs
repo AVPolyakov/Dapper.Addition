@@ -1,7 +1,7 @@
 ﻿using System.Collections.Immutable;
 using System.Transactions;
 
-namespace Dapper.Addition.SqlServer.Tests
+namespace SavedTransactionScopes
 {
     public class TransactionAmbientData
     {

@@ -3,6 +3,8 @@ using System.Data.SqlClient;
 using System.Reflection;
 using System.Threading.Tasks;
 using DbUp;
+using SavedTransactionScope.SqlServer;
+using SavedTransactionScopes;
 using Xunit;
 
 namespace Dapper.Addition.SqlServer.Tests
@@ -15,7 +17,8 @@ namespace Dapper.Addition.SqlServer.Tests
         public DatabaseFixture()
         {
             Sql.MappingCheckEnabled = true;
-            ISqlAdapter.Current = new SqlServerAdapter(); 
+            ISqlAdapter.Current = new SqlServerAdapter();
+            ISavepointAdapter.Current = new SqlServerSavepointAdapter();
             
             Db = new DbExecutor(ConnectionString);
             SavepointExecutor = new SavepointExecutor(ConnectionString);

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Data;
 
-namespace Dapper.Addition.SqlServer.Tests
+namespace SavedTransactionScopes
 {
     public interface ISavepointExecutor
     {

@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using SavedTransactionScopes;
 using Xunit;
 
-namespace Dapper.Addition.SqlServer.Tests
+namespace Dapper.Addition.PostgreSql.Tests
 {
     [Collection(nameof(FixtureCollection))]
     public class TransactionScopeFixture : IDisposable, IAsyncLifetime 

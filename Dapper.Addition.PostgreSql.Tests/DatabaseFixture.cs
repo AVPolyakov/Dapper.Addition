@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Reflection;
 using System.Threading.Tasks;
-using Dapper;
 using DbUp;
 using Npgsql;
+using SavedTransactionScope.PostgreSql;
+using SavedTransactionScopes;
 using Xunit;
 
 namespace Dapper.Addition.PostgreSql.Tests
@@ -11,14 +12,17 @@ namespace Dapper.Addition.PostgreSql.Tests
     public class DatabaseFixture: IAsyncLifetime
     {
         public IDbExecutor Db { get; }
+        public ISavepointExecutor SavepointExecutor { get; }
 
         public DatabaseFixture()
         {
             Sql.MappingCheckEnabled = true;
             ISqlAdapter.Current = new PostgreSqlAdapter();
+            ISavepointAdapter.Current = new PostgreSqlSavepointAdapter();
             DefaultTypeMap.MatchNamesWithUnderscores = true;
             
             Db = new DbExecutor(ConnectionString);
+            SavepointExecutor = new SavepointExecutor(ConnectionString);
         }
         
         private static string ConnectionString => new NpgsqlConnectionStringBuilder(DefaultConnectionString) {Database = DatabaseName}.ConnectionString;
