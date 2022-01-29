@@ -7,15 +7,21 @@ namespace SavedTransactionScopes
 {
     public class SavepointHandler
     {
-        internal static AsyncLocal<ImmutableStack<SavepointHandler>> SavepointHandlers { get; } = new();
+        private static readonly AsyncLocal<ImmutableStack<SavepointHandler>?> _savepointHandlers = new();
+
+        public static ImmutableStack<SavepointHandler>? SavepointHandlers
+        {
+            get => _savepointHandlers.Value;
+            set => _savepointHandlers.Value = value;
+        }
 
         private readonly SavepointInfo? _savepointInfo;
 
         public ISavepointExecutor? SavepointExecutor { private get; set; }
-        
+
         public SavepointHandler(TransactionScopeOption scopeOption)
         {
-            var stack = SavepointHandlers.Value ?? ImmutableStack<SavepointHandler>.Empty;
+            var stack = _savepointHandlers.Value ?? ImmutableStack<SavepointHandler>.Empty;
             
             if (scopeOption == TransactionScopeOption.Required)
             {
@@ -29,7 +35,7 @@ namespace SavedTransactionScopes
                 }
             }
             
-            SavepointHandlers.Value = stack.Push(this);
+            _savepointHandlers.Value = stack.Push(this);
         }
         
         public void Complete()
@@ -40,9 +46,9 @@ namespace SavedTransactionScopes
         
         public void Dispose(TransactionScope transactionScope)
         {
-            var stack = SavepointHandlers.Value;
+            var stack = _savepointHandlers.Value;
             if (stack != null && !stack.IsEmpty)
-                SavepointHandlers.Value = stack.Pop();
+                _savepointHandlers.Value = stack.Pop();
 
             if (_savepointInfo != null)
             {

@@ -16,11 +16,11 @@ namespace SavedTransactionScopes
 
         public static TransactionAmbientData Current
         {
-            get => new(Transaction.Current, SavepointHandler.SavepointHandlers.Value);
+            get => new(Transaction.Current, SavepointHandler.SavepointHandlers);
             set
             {
                 Transaction.Current = value._transaction;
-                SavepointHandler.SavepointHandlers.Value = value._savepointHandlers!;
+                SavepointHandler.SavepointHandlers = value._savepointHandlers;
             }
         }
     }
