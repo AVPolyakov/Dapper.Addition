@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Dapper.Addition.Shared.Tests;
+using Dapper.Addition.Shared.Tests.SavedTransactionScopes;
 using SavedTransactionScopes;
 using Xunit;
 
-namespace Dapper.Addition.PostgreSql.Tests
+namespace Dapper.Addition.PostgreSql.Tests.SavedTransactionScopes
 {
     [Collection(nameof(FixtureCollection))]
     public class TransactionScopeTests: IClassFixture<TransactionScopeFixture>, IDisposable

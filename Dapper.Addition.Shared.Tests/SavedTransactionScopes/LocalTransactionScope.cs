@@ -3,7 +3,7 @@ using System.Transactions;
 using SavedTransactionScopes;
 using IsolationLevel = System.Transactions.IsolationLevel;
 
-namespace Dapper.Addition.Shared.Tests
+namespace Dapper.Addition.Shared.Tests.SavedTransactionScopes
 {
     public sealed class LocalTransactionScope: IDisposable
     {

@@ -2,6 +2,7 @@
 using System.Data.SqlClient;
 using System.Reflection;
 using System.Threading.Tasks;
+using Dapper.Addition.SqlServer.Tests.SavedTransactionScopes;
 using DbUp;
 using SavedTransactionScope.SqlServer;
 using SavedTransactionScopes;

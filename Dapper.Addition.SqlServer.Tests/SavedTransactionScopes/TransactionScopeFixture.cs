@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Dapper.Addition.Shared.Tests;
+using Dapper.Addition.Shared.Tests.SavedTransactionScopes;
 using SavedTransactionScopes;
 using Xunit;
 
-namespace Dapper.Addition.SqlServer.Tests
+namespace Dapper.Addition.SqlServer.Tests.SavedTransactionScopes
 {
     [Collection(nameof(FixtureCollection))]
     public class TransactionScopeFixture : IDisposable, IAsyncLifetime 

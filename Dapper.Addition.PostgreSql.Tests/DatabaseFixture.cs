@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Reflection;
 using System.Threading.Tasks;
+using Dapper.Addition.PostgreSql.Tests.SavedTransactionScopes;
 using DbUp;
 using Npgsql;
 using SavedTransactionScope.PostgreSql;

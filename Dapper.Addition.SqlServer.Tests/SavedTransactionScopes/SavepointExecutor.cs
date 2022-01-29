@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Data;
-using Npgsql;
+using System.Data.SqlClient;
 using SavedTransactionScopes;
 
-namespace Dapper.Addition.PostgreSql.Tests
+namespace Dapper.Addition.SqlServer.Tests.SavedTransactionScopes
 {
     public class SavepointExecutor : ISavepointExecutor
     {
@@ -16,7 +16,7 @@ namespace Dapper.Addition.PostgreSql.Tests
         
         public TResult Execute<TResult>(Func<IDbConnection, TResult> func)
         {
-            using (var connection = new NpgsqlConnection(_connectionString))
+            using (var connection = new SqlConnection(_connectionString))
                 return func(connection);
         }
     }
