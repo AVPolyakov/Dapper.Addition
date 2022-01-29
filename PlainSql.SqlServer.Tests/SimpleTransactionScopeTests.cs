@@ -35,9 +35,14 @@ namespace PlainSql.SqlServer.Tests
                         var name = await _db.QuerySingleAsync<string>("SELECT Name FROM Clients WHERE Id = @id", new { id = 2 });
                         Assert.Equal("Client.v2", name);
                     }
+                } //rollback scope2
+
+                {
+                    var name = await _db.QuerySingleAsync<string>("SELECT Name FROM Clients WHERE Id = @id", new { id = 2 });
+                    Assert.Equal("Client", name);
                 }
                 
-                using (new LocalTransactionScope()) //scope3
+                using (var scope3 = new LocalTransactionScope()) //scope3
                 {
                     {
                         var name = await _db.QuerySingleAsync<string>("SELECT Name FROM Clients WHERE Id = @id", new { id = 2 });
@@ -50,11 +55,13 @@ namespace PlainSql.SqlServer.Tests
                         var name = await _db.QuerySingleAsync<string>("SELECT Name FROM Clients WHERE Id = @id", new { id = 2 });
                         Assert.Equal("Client.v3", name);
                     }
+                    
+                    scope3.Complete();
                 }
                 
                 {
                     var name = await _db.QuerySingleAsync<string>("SELECT Name FROM Clients WHERE Id = @id", new { id = 2 });
-                    Assert.Equal("Client", name);
+                    Assert.Equal("Client.v3", name);
                 }
             }
         }
