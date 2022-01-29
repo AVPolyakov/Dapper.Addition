@@ -14,28 +14,32 @@ namespace Dapper.Addition.SqlServer.Tests
         private readonly ISavepointExecutor? _savepointExecutor;
         private readonly SavepointInfo? _savepointInfo;
         private readonly TransactionScope _transactionScope;
-        
-        public LocalTransactionScope(ISavepointExecutor? savepointExecutor = null)
+
+        public LocalTransactionScope(TransactionScopeOption scopeOption = TransactionScopeOption.Required,
+            ISavepointExecutor? savepointExecutor = null)
         {
             _savepointExecutor = savepointExecutor;
             
             var stack = LocalTransactionScopes.Value ?? ImmutableStack<LocalTransactionScope>.Empty;
-            if (!stack.IsEmpty)
+            if (scopeOption == TransactionScopeOption.Required)
             {
-                var parentTransactionScope = stack.Peek();
-                var executor = parentTransactionScope._savepointExecutor;
-                _savepointInfo = executor != null 
-                    ? new SavepointInfo(executor.Execute(SetSavepoint), executor) 
-                    : parentTransactionScope._savepointInfo;
+                if (!stack.IsEmpty)
+                {
+                    var parentTransactionScope = stack.Peek();
+                    var executor = parentTransactionScope._savepointExecutor;
+                    _savepointInfo = executor != null
+                        ? new SavepointInfo(executor.Execute(SetSavepoint), executor)
+                        : parentTransactionScope._savepointInfo;
+                }
             }
             LocalTransactionScopes.Value = stack.Push(this);
             
             _transactionScope = new TransactionScope(
-                TransactionScopeOption.Required,
+                scopeOption,
                 new TransactionOptions{IsolationLevel = IsolationLevel.ReadCommitted},
                 TransactionScopeAsyncFlowOption.Enabled);
         }
-
+        
         public void Complete()
         {
             if (_savepointInfo != null)
