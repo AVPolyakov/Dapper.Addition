@@ -30,7 +30,7 @@ namespace Dapper.Addition.PostgreSql.Tests
         
         private const string DefaultConnectionString = @"Server=127.0.0.1;Port=5432;Database=postgres;User Id=postgres;Password=qwe123456;";
         
-        private const string DatabaseName = "plain_sql";
+        private const string DatabaseName = "dapper_addition";
 
         public async Task InitializeAsync()
         {
