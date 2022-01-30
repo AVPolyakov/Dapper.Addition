@@ -1,4 +1,0 @@
-﻿CREATE TABLE Clients (
-    Id INT PRIMARY KEY,
-    Name NVARCHAR(MAX) NULL
-);

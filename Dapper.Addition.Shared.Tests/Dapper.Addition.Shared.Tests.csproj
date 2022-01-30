@@ -8,7 +8,6 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Dapper.Addition\Dapper.Addition.csproj" />
-      <ProjectReference Include="..\SavepointHandlers\SavepointHandlers.csproj" />
     </ItemGroup>
 
 </Project>

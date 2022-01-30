@@ -3,8 +3,6 @@ using System.Reflection;
 using System.Threading.Tasks;
 using DbUp;
 using Npgsql;
-using SavepointHandlers.PostgreSql;
-using SavepointHandlers;
 using Xunit;
 
 namespace Dapper.Addition.PostgreSql.Tests
@@ -17,7 +15,6 @@ namespace Dapper.Addition.PostgreSql.Tests
         {
             Sql.MappingCheckEnabled = true;
             ISqlAdapter.Current = new PostgreSqlAdapter();
-            ISavepointAdapter.Current = new PostgreSqlSavepointAdapter();
             DefaultTypeMap.MatchNamesWithUnderscores = true;
             
             Db = new DbExecutor(ConnectionString);

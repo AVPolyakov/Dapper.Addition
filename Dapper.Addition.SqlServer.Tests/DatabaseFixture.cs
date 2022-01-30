@@ -3,8 +3,6 @@ using System.Data.SqlClient;
 using System.Reflection;
 using System.Threading.Tasks;
 using DbUp;
-using SavepointHandlers.SqlServer;
-using SavepointHandlers;
 using Xunit;
 
 namespace Dapper.Addition.SqlServer.Tests
@@ -17,7 +15,6 @@ namespace Dapper.Addition.SqlServer.Tests
         {
             Sql.MappingCheckEnabled = true;
             ISqlAdapter.Current = new SqlServerAdapter();
-            ISavepointAdapter.Current = new SqlServerSavepointAdapter();
             
             Db = new DbExecutor(ConnectionString);
         }
