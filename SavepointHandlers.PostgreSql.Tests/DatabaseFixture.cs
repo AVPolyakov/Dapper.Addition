@@ -1,17 +1,20 @@
 ﻿using System;
 using System.Reflection;
 using System.Threading.Tasks;
+using Dapper;
+using Dapper.Addition;
+using Dapper.Addition.PostgreSql;
+using Dapper.Addition.PostgreSql.Tests;
 using DbUp;
 using Npgsql;
-using SavepointHandlers.PostgreSql;
-using SavepointHandlers;
 using Xunit;
 
-namespace Dapper.Addition.PostgreSql.Tests
+namespace SavepointHandlers.PostgreSql.Tests
 {
     public class DatabaseFixture: IAsyncLifetime
     {
         public IDbExecutor Db { get; }
+        public ISavepointExecutor SavepointExecutor { get; }
 
         public DatabaseFixture()
         {
@@ -21,6 +24,7 @@ namespace Dapper.Addition.PostgreSql.Tests
             DefaultTypeMap.MatchNamesWithUnderscores = true;
             
             Db = new DbExecutor(ConnectionString);
+            SavepointExecutor = new SavepointExecutor(ConnectionString);
         }
         
         private static string ConnectionString => new NpgsqlConnectionStringBuilder(DefaultConnectionString) {Database = DatabaseName}.ConnectionString;

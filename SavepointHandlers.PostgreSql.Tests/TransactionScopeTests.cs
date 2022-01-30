@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Dapper.Addition.Shared.Tests.SavepointHandlers;
-using SavepointHandlers;
+using Dapper.Addition;
+using Dapper.Addition.PostgreSql.Tests;
 using Xunit;
 
-namespace Dapper.Addition.PostgreSql.Tests.SavepointHandlers
+namespace SavepointHandlers.PostgreSql.Tests
 {
     [Collection(nameof(FixtureCollection))]
     public class TransactionScopeFixture : IDisposable, IAsyncLifetime 

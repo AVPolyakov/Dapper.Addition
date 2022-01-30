@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Transactions;
-using SavepointHandlers;
 using IsolationLevel = System.Transactions.IsolationLevel;
 
-namespace Dapper.Addition.Shared.Tests.SavepointHandlers
+namespace SavepointHandlers.PostgreSql.Tests
 {
     public sealed class LocalTransactionScope: IDisposable
     {

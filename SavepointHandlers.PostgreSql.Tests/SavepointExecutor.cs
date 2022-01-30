@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Data;
 using Npgsql;
-using SavepointHandlers;
 
-namespace Dapper.Addition.PostgreSql.Tests.SavepointHandlers
+namespace SavepointHandlers.PostgreSql.Tests
 {
     public class SavepointExecutor : ISavepointExecutor
     {
