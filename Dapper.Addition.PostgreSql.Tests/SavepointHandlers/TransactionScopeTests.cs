@@ -11,14 +11,14 @@ namespace Dapper.Addition.PostgreSql.Tests.SavepointHandlers
     {
         private readonly IDbExecutor _db;
         private readonly LocalTransactionScope _transactionScope;
-        public TransactionAmbientData TransactionAmbientData { get; }
+        public AmbientTransactionData AmbientTransactionData { get; }
         
         public TransactionScopeFixture(DatabaseFixture databaseFixture)
         {
             _db = databaseFixture.Db;
             
             _transactionScope = new LocalTransactionScope {SavepointExecutor = databaseFixture.SavepointExecutor};
-            TransactionAmbientData = TransactionAmbientData.Current;
+            AmbientTransactionData = AmbientTransactionData.Current;
         }
         
         public async Task InitializeAsync()
@@ -42,7 +42,7 @@ namespace Dapper.Addition.PostgreSql.Tests.SavepointHandlers
         {
             _db = databaseFixture.Db;
 
-            TransactionAmbientData.Current = fixture.TransactionAmbientData;
+            AmbientTransactionData.Current = fixture.AmbientTransactionData;
             
             _transactionScope = new LocalTransactionScope {SavepointExecutor = databaseFixture.SavepointExecutor};
         }
