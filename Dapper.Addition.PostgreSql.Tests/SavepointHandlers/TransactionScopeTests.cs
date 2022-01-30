@@ -18,6 +18,7 @@ namespace Dapper.Addition.PostgreSql.Tests.SavepointHandlers
             _db = databaseFixture.Db;
             
             _transactionScope = new LocalTransactionScope {SavepointExecutor = databaseFixture.SavepointExecutor};
+            
             AmbientTransactionData = AmbientTransactionData.Current;
         }
         
