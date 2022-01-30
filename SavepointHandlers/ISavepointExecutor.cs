@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Data;
 
-namespace SavedTransactionScopes
+namespace SavepointHandlers
 {
     public interface ISavepointExecutor
     {

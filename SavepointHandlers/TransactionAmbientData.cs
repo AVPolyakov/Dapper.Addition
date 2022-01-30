@@ -1,7 +1,7 @@
 ﻿using System.Collections.Immutable;
 using System.Transactions;
 
-namespace SavedTransactionScopes
+namespace SavepointHandlers
 {
     public class TransactionAmbientData
     {

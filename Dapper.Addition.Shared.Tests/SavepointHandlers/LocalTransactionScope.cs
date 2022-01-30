@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Transactions;
-using SavedTransactionScopes;
+using SavepointHandlers;
 using IsolationLevel = System.Transactions.IsolationLevel;
 
-namespace Dapper.Addition.Shared.Tests.SavedTransactionScopes
+namespace Dapper.Addition.Shared.Tests.SavepointHandlers
 {
     public sealed class LocalTransactionScope: IDisposable
     {

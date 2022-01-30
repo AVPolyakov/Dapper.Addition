@@ -3,7 +3,7 @@ using System.Data;
 using System.Threading;
 using System.Transactions;
 
-namespace SavedTransactionScopes
+namespace SavepointHandlers
 {
     public class SavepointHandler
     {

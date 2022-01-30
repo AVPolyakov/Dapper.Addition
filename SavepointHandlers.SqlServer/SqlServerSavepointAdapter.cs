@@ -1,8 +1,8 @@
 using System;
 using System.Data;
-using SavedTransactionScopes;
+using SavepointHandlers;
 
-namespace SavedTransactionScope.SqlServer
+namespace SavepointHandlers.SqlServer
 {
     public class SqlServerSavepointAdapter : ISavepointAdapter
     {

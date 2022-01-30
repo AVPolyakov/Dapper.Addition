@@ -1,8 +1,8 @@
 using System;
 using System.Data;
-using SavedTransactionScopes;
+using SavepointHandlers;
 
-namespace SavedTransactionScope.PostgreSql
+namespace SavepointHandlers.PostgreSql
 {
     public class PostgreSqlSavepointAdapter : ISavepointAdapter
     {

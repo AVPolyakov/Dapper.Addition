@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Reflection;
 using System.Threading.Tasks;
-using Dapper.Addition.PostgreSql.Tests.SavedTransactionScopes;
+using Dapper.Addition.PostgreSql.Tests.SavepointHandlers;
 using DbUp;
 using Npgsql;
-using SavedTransactionScope.PostgreSql;
-using SavedTransactionScopes;
+using SavepointHandlers.PostgreSql;
+using SavepointHandlers;
 using Xunit;
 
 namespace Dapper.Addition.PostgreSql.Tests

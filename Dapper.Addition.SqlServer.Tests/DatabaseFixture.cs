@@ -2,10 +2,10 @@
 using System.Data.SqlClient;
 using System.Reflection;
 using System.Threading.Tasks;
-using Dapper.Addition.SqlServer.Tests.SavedTransactionScopes;
+using Dapper.Addition.SqlServer.Tests.SavepointHandlers;
 using DbUp;
-using SavedTransactionScope.SqlServer;
-using SavedTransactionScopes;
+using SavepointHandlers.SqlServer;
+using SavepointHandlers;
 using Xunit;
 
 namespace Dapper.Addition.SqlServer.Tests
