@@ -28,7 +28,9 @@ namespace SavedTransactionScopes
                 if (!stack.IsEmpty)
                 {
                     var parent = stack.Peek();
+                    
                     var executor = parent.SavepointExecutor;
+                    
                     _savepointInfo = executor != null
                         ? new SavepointInfo(executor.Execute(SetSavepoint), executor)
                         : parent._savepointInfo;
