@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Data;
 using System.Data.SqlClient;
-using SavepointHandlers;
 
-namespace Dapper.Addition.SqlServer.Tests.SavepointHandlers
+namespace SavepointHandlers.SqlServer.Tests
 {
     public class SavepointExecutor : ISavepointExecutor
     {

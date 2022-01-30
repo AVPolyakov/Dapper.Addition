@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Dapper.Addition.Shared.Tests.SavepointHandlers;
-using SavepointHandlers;
+using Dapper.Addition;
 using Xunit;
 
-namespace Dapper.Addition.SqlServer.Tests.SavepointHandlers
+namespace SavepointHandlers.SqlServer.Tests
 {
     [Collection(nameof(FixtureCollection))]
     public class TransactionScopeFixture : IDisposable, IAsyncLifetime 
@@ -24,7 +23,7 @@ namespace Dapper.Addition.SqlServer.Tests.SavepointHandlers
         
         public async Task InitializeAsync()
         {
-            await _db.InsertAsync(new Client {Id = 2, Name = "Name1"});
+            await _db.InsertAsync(new Client {Id = 1, Name = "Name1"});
         }
 
         public Task DisposeAsync() => Task.CompletedTask;
@@ -54,14 +53,14 @@ namespace Dapper.Addition.SqlServer.Tests.SavepointHandlers
         public async Task UpdateToName2_Success()
         {
             {
-                var name = await _db.QuerySingleAsync<string>("SELECT Name FROM Clients WHERE Id = @Id", new { Id = 2 });
+                var name = await _db.QuerySingleAsync<string>("SELECT Name FROM Clients WHERE Id = @Id", new { Id = 1 });
                 Assert.Equal("Name1", name);
             }
 
-            await _db.ExecuteAsync("UPDATE Clients SET Name = @Name WHERE Id = @Id", new { Name = "Name2", Id = 2 });
+            await _db.ExecuteAsync("UPDATE Clients SET Name = @Name WHERE Id = @Id", new { Name = "Name2", Id = 1 });
 
             {
-                var name = await _db.QuerySingleAsync<string>("SELECT Name FROM Clients WHERE Id = @Id", new { Id = 2 });
+                var name = await _db.QuerySingleAsync<string>("SELECT Name FROM Clients WHERE Id = @Id", new { Id = 1 });
                 Assert.Equal("Name2", name);
             }
         }
@@ -70,14 +69,14 @@ namespace Dapper.Addition.SqlServer.Tests.SavepointHandlers
         public async Task UpdateToName3_Success()
         {
             {
-                var name = await _db.QuerySingleAsync<string>("SELECT Name FROM Clients WHERE Id = @Id", new { Id = 2 });
+                var name = await _db.QuerySingleAsync<string>("SELECT Name FROM Clients WHERE Id = @Id", new { Id = 1 });
                 Assert.Equal("Name1", name);
             }
 
-            await _db.ExecuteAsync("UPDATE Clients SET Name = @Name WHERE Id = @Id", new { Name = "Name3", Id = 2 });
+            await _db.ExecuteAsync("UPDATE Clients SET Name = @Name WHERE Id = @Id", new { Name = "Name3", Id = 1 });
 
             {
-                var name = await _db.QuerySingleAsync<string>("SELECT Name FROM Clients WHERE Id = @Id", new { Id = 2 });
+                var name = await _db.QuerySingleAsync<string>("SELECT Name FROM Clients WHERE Id = @Id", new { Id = 1 });
                 Assert.Equal("Name3", name);
             }
         }
