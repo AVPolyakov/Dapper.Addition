@@ -9,7 +9,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Dapper.Addition\Dapper.Addition.csproj" />
+        <PackageReference Include="Npgsql" Version="6.0.0" />
+        <ProjectReference Include="..\Dapper.Addition\Dapper.Addition.csproj" />
     </ItemGroup>
     
 </Project>

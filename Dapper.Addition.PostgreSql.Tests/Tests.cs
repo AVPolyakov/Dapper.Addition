@@ -143,5 +143,21 @@ WHERE p.creation_date >= @fromDate
             var rowCount = await _db.DeleteAsync<Table3>(new {Id = id});
             Assert.Equal(1, rowCount);
         }
+        
+        [Fact]
+        public async Task Xid8_Success()
+        {
+            var xmin = await _db.QuerySingleAsync<Xid8?>(new Sql("select pg_snapshot_xmin(pg_current_snapshot())"));
+            Assert.True(xmin!.Value.Value > 0);
+            
+            var xactId = await _db.QuerySingleAsync<Xid8?>(new Sql("select pg_current_xact_id_if_assigned()"));
+            Assert.Null(xactId);
+
+            var xmin2 = await _db.QuerySingleAsync<Xid8?>(new Sql("select @xmin", new { xmin }));
+            Assert.True(xmin2!.Value.Value > 0);
+
+            var xactId2 = await _db.QuerySingleAsync<Xid8?>(new Sql("select @xactId", new { xactId }));
+            Assert.Null(xactId2);
+        }
     }
 }
