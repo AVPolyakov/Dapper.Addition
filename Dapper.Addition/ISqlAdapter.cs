@@ -1,4 +1,5 @@
 using System;
+using System.Data;
 
 namespace Dapper.Addition
 {
@@ -22,5 +23,7 @@ namespace Dapper.Addition
             }
             set => _current = value;
         }
+
+        Type GetFieldType(IDataReader reader, int ordinal) => reader.GetFieldType(ordinal);
     }
 }

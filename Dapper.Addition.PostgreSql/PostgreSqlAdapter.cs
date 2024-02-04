@@ -1,3 +1,6 @@
+using System;
+using System.Data;
+
 namespace Dapper.Addition.PostgreSql
 {
     public class PostgreSqlAdapter : ISqlAdapter
@@ -14,5 +17,20 @@ VALUES ({valuesClause})
 RETURNING {outClause}";
         
         public string EscapedName(string name) => $"\"{name}\"";
+        
+        public Type GetFieldType(IDataReader reader, int ordinal)
+        {
+            var row = reader.GetSchemaTable()!.Rows[ordinal];
+            if (row["DataTypeName"] is string dataTypeName)
+            {
+                switch (dataTypeName)
+                {
+                    case "xid8":
+                        return typeof(Xid8);
+                }
+            }
+            
+            return reader.GetFieldType(ordinal);
+        }
     }
 }

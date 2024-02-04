@@ -13,7 +13,7 @@ namespace Dapper.Addition.PostgreSql.Tests
 
         public DatabaseFixture()
         {
-            //Sql.MappingCheckEnabled = true;
+            Sql.MappingCheckEnabled = true;
             ISqlAdapter.Current = new PostgreSqlAdapter();
             Xid8TypeHandler.AddToSqlMapper();
             DefaultTypeMap.MatchNamesWithUnderscores = true;

@@ -2,11 +2,10 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using Dapper;
 
 namespace Dapper.Addition
 {
-    internal static class DataReaderExtensions
+    public static class DataReaderExtensions
     {
         internal static void CheckMapping(this IDataReader reader, Type type)
         {
@@ -71,10 +70,12 @@ namespace Dapper.Addition
                 typeof(byte[]),
             }
             .ToHashSet();
+
+        public static void AddScalarReadType(Type type) => _scalarReadType.Add(type);
         
         private static void CheckFieldType(IDataReader reader, int ordinal, Type destinationType, Type type)
         {
-            var fieldType = reader.GetFieldType(ordinal);
+            var fieldType = GetFieldType(reader, ordinal);
             var allowDbNull = AllowDbNull(reader, ordinal);
             if (allowDbNull)
             {
@@ -126,9 +127,10 @@ namespace Dapper.Addition
 
         private static Type GetFieldTypeWithNullable(this IDataReader reader, int i)
         {
-            return AllowDbNull(reader, i) && reader.GetFieldType(i).IsValueType
-                ? typeof(Nullable<>).MakeGenericType(reader.GetFieldType(i))
-                : reader.GetFieldType(i);
+            var fieldType = GetFieldType(reader, i);
+            return AllowDbNull(reader, i) && fieldType.IsValueType
+                ? typeof(Nullable<>).MakeGenericType(fieldType)
+                : fieldType;
         }
 
         private static string EntityColumnName(this string name)
@@ -175,6 +177,11 @@ namespace Dapper.Addition
                 return false;
             else
                 return true;
+        }
+
+        private static Type GetFieldType(IDataReader reader, int ordinal)
+        {
+            return ISqlAdapter.Current.GetFieldType(reader, ordinal);
         }
         
         /// <summary>
