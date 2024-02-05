@@ -9,7 +9,8 @@ public class Xid8TypeHandler : SqlMapper.ITypeHandler
 {
     public static void AddToSqlMapper()
     {
-        SqlMapper.AddTypeHandler(typeof(Xid8?), new Xid8TypeHandler());
+        SqlMapper.AddTypeHandler(typeof(Xid8), new Xid8TypeHandler());
+        DataReaderExtensions.AddScalarReadType(typeof(Xid8));
         DataReaderExtensions.AddScalarReadType(typeof(Xid8?));
     }
     
