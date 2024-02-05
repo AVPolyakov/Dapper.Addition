@@ -13,6 +13,7 @@ namespace Dapper.Addition.PostgreSql.Tests
 
         public DatabaseFixture()
         {
+            AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
             Sql.MappingCheckEnabled = true;
             ISqlAdapter.Current = new PostgreSqlAdapter();
             Xid8TypeHandler.AddToSqlMapper();
